@@ -10,11 +10,11 @@ import Link from 'next/link';
 import { Product } from '@/types/api';
 
 export const metadata: Metadata = {
-  title: 'KinShop | Premium eCommerce Experience',
-  description: 'Shop the latest premium products at KinShop. Fast delivery, secure payments, and high-quality items for your modern lifestyle.',
+  title: 'KinShop | Trải nghiệm mua sắm cao cấp',
+  description: 'Mua sắm các sản phẩm cao cấp mới nhất tại KinShop. Giao hàng nhanh, thanh toán bảo mật và sản phẩm chất lượng cho phong cách sống hiện đại.',
   openGraph: {
-    title: 'KinShop | Premium eCommerce Experience',
-    description: 'Shop the latest premium products at KinShop.',
+    title: 'KinShop | Trải nghiệm mua sắm cao cấp',
+    description: 'Mua sắm các sản phẩm cao cấp mới nhất tại KinShop.',
     type: 'website',
   },
 };
@@ -26,7 +26,7 @@ export default async function HomePage() {
     const response = await apiService.getProducts({ limit: 8 });
     products = response.data;
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    console.error('Lỗi khi tải sản phẩm:', error);
   }
 
   return (
@@ -44,27 +44,27 @@ export default async function HomePage() {
           <div className="container-custom relative z-10 grid items-center gap-12 lg:grid-cols-2">
             <div className="flex flex-col items-start space-y-8">
               <span className="inline-flex items-center rounded-full bg-primary-500/10 px-3 py-1 text-sm font-semibold text-primary-400 ring-1 ring-inset ring-primary-500/20">
-                New Summer Collection 2026
+                Bộ sưu tập mùa hè mới 2026
               </span>
               <h1 className="text-5xl font-extrabold tracking-tight lg:text-7xl">
-                Elevate Your <span className="text-primary-500">Lifestyle</span> with KinShop.
+                Nâng tầm <span className="text-primary-500">Phong cách</span> cùng KinShop.
               </h1>
               <p className="max-w-xl text-lg leading-relaxed text-slate-300">
-                Discover a curated selection of premium products designed for quality, comfort, and style. Experience the future of online shopping today.
+                Khám phá bộ sưu tập sản phẩm cao cấp được tuyển chọn kỹ lưỡng về chất lượng, sự thoải mái và phong cách. Trải nghiệm tương lai của mua sắm trực tuyến ngay hôm nay.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="btn-primary h-12 px-8 text-base shadow-xl shadow-primary-500/30">
-                  Shop Now
-                </button>
-                <button className="inline-flex h-12 items-center justify-center rounded-md border border-slate-700 bg-transparent px-8 text-base font-medium text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-700">
-                  View Collection
-                </button>
+                <Link href="/products" className="btn-primary flex items-center h-12 px-8 text-base shadow-xl shadow-primary-500/30 text-white">
+                  Mua sắm ngay
+                </Link>
+                <Link href="/products" className="inline-flex h-12 items-center justify-center rounded-md border border-slate-700 bg-transparent px-8 text-base font-medium text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-700">
+                  Xem bộ sưu tập
+                </Link>
               </div>
             </div>
             {/* Visual element placeholder */}
             <div className="hidden lg:block relative h-[500px] w-full rounded-2xl border border-slate-800 bg-slate-800/50 p-4 shadow-2xl backdrop-blur-sm">
-               <div className="h-full w-full rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 opacity-50 flex items-center justify-center">
-                  <span className="text-slate-500 font-bold text-2xl">Premium Product Showcase</span>
+               <div className="h-full w-full rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 opacity-50 flex items-center justify-center text-center p-8">
+                  <span className="text-slate-500 font-bold text-2xl uppercase tracking-widest">Trưng bày sản phẩm cao cấp</span>
                </div>
             </div>
           </div>
@@ -77,29 +77,29 @@ export default async function HomePage() {
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
                 <Truck className="h-7 w-7" />
               </div>
-              <h3 className="font-bold text-slate-900 leading-none">Free Shipping</h3>
-              <p className="text-sm text-slate-500">Available on all orders over $100 worldwide.</p>
+              <h3 className="font-bold text-slate-900 leading-none">Miễn phí vận chuyển</h3>
+              <p className="text-sm text-slate-500">Áp dụng cho mọi đơn hàng trên 1.000.000đ.</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-2xl transition-all hover:bg-slate-50">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
                 <ShieldCheck className="h-7 w-7" />
               </div>
-              <h3 className="font-bold text-slate-900 leading-none">Secure Payment</h3>
-              <p className="text-sm text-slate-500">100% secure payment methods with fraud protection.</p>
+              <h3 className="font-bold text-slate-900 leading-none">Thanh toán bảo mật</h3>
+              <p className="text-sm text-slate-500">100% bảo mật với các phương thức thanh toán tiên tiến nhất.</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-2xl transition-all hover:bg-slate-50">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
                 <Zap className="h-7 w-7" />
               </div>
-              <h3 className="font-bold text-slate-900 leading-none">Fast Delivery</h3>
-              <p className="text-sm text-slate-500">Get your products delivered in 2-3 business days.</p>
+              <h3 className="font-bold text-slate-900 leading-none">Giao hàng nhanh</h3>
+              <p className="text-sm text-slate-500">Nhận hàng chỉ từ 2-3 ngày làm việc trên toàn quốc.</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-2xl transition-all hover:bg-slate-50">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
                 <LayoutGrid className="h-7 w-7" />
               </div>
-              <h3 className="font-bold text-slate-900 leading-none">Huge Variety</h3>
-              <p className="text-sm text-slate-500">Choose from thousands of premium global brands.</p>
+              <h3 className="font-bold text-slate-900 leading-none">Đa dạng sản phẩm</h3>
+              <p className="text-sm text-slate-500">Lựa chọn từ hàng ngàn sản phẩm cao cấp chính hãng.</p>
             </div>
           </div>
         </section>
@@ -109,11 +109,11 @@ export default async function HomePage() {
           <div className="container-custom">
             <div className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Featured Products</h2>
-                <p className="text-slate-500">Handpicked items selected for their exceptional quality and design.</p>
+                <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Sản phẩm nổi bật</h2>
+                <p className="text-slate-500">Những sản phẩm được tuyển chọn dựa trên chất lượng và thiết kế vượt trội.</p>
               </div>
               <Link href="/products" className="group flex items-center text-sm font-bold text-primary-600">
-                View All Products
+                Xem toàn bộ sản phẩm
                 <span className="ml-1 transition-transform group-hover:translate-x-1">→</span>
               </Link>
             </div>
@@ -126,8 +126,8 @@ export default async function HomePage() {
               </div>
             ) : (
               <div className="flex h-96 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
-                <p className="text-lg font-medium text-slate-600">No products available at the moment.</p>
-                <p className="mt-2 text-sm text-slate-400">Please check back later or start the backend server.</p>
+                <p className="text-lg font-medium text-slate-600">Hiện tại chưa có sản phẩm nào.</p>
+                <p className="mt-2 text-sm text-slate-400">Vui lòng quay lại sau hoặc liên hệ với chúng tôi để được hỗ trợ.</p>
               </div>
             )}
           </div>
@@ -142,18 +142,18 @@ export default async function HomePage() {
                </svg>
             </div>
             <div className="relative z-10 mx-auto max-w-2xl space-y-8">
-              <h2 className="text-4xl font-extrabold tracking-tight">Stay in the Loop</h2>
+              <h2 className="text-4xl font-extrabold tracking-tight">Cập nhật tin tức mới nhất</h2>
               <p className="text-lg text-primary-100 italic">
-                Subscribe to our newsletter and get 10% off your first purchase, plus early access to new collections.
+                Đăng ký nhận tin để được giảm ngay 10% cho đơn hàng đầu tiên và cập nhật sớm nhất các bộ sưu tập mới.
               </p>
               <form className="flex flex-col sm:flex-row items-center gap-4 max-w-md mx-auto">
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                   className="w-full h-12 rounded-lg bg-white/10 border border-white/20 px-6 text-white placeholder:text-primary-200 outline-none focus:bg-white/20 transition-all font-medium"
                 />
                 <button type="button" className="w-full sm:w-auto h-12 rounded-lg bg-white px-8 text-primary-600 font-bold shadow-lg transition-transform hover:scale-105 active:scale-95">
-                  Subscribe
+                  Đăng ký ngay
                 </button>
               </form>
             </div>

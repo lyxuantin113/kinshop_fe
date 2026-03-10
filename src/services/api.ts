@@ -3,6 +3,7 @@ import { Product, Category, PaginatedResponse, ProductFilters, Cart, Order, Auth
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
+let onUnauthorizedCallback: (() => void) | null = null;
 
 const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000/api';
 const API_BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl : `${rawBaseUrl}/`;
@@ -59,8 +60,8 @@ export const apiService = {
     },
 
     getProductBySlug: async (idOrSlug: string) => {
-        const response = await apiClient.get<Product>(`products/${idOrSlug}`);
-        return response.data;
+        const response = await apiClient.get<{ data: Product }>(`products/${idOrSlug}`);
+        return response.data.data;
     },
 
     // Categories
@@ -170,6 +171,10 @@ export const apiService = {
         const response = await apiClient.patch(`system-configs/${key}`, { value, description });
         return response.data;
     },
+
+    onUnauthorized: (callback: () => void) => {
+        onUnauthorizedCallback = callback;
+    },
 };
 
 // Add Interceptor for Authorization Header
@@ -198,6 +203,7 @@ apiClient.interceptors.response.use(
                     .catch((err) => {
                         accessToken = null;
                         refreshPromise = null;
+                        if (onUnauthorizedCallback) onUnauthorizedCallback();
                         return null;
                     });
             }

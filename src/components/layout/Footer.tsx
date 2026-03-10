@@ -4,50 +4,48 @@ import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-900 border-t border-slate-800 pt-16 pb-8 text-slate-400">
-      <div className="container-custom">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Brand Info */}
+    <footer className="bg-slate-900 border-t border-slate-800">
+      <div className="container-custom py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+          {/* Brand */}
           <div className="space-y-6">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold tracking-tight text-white">KinShop</span>
-            </Link>
-            <p className="max-w-xs text-sm leading-6">
-              Leading the way in premium eCommerce experiences. High quality, speed, and reliability in every delivery.
+            <h3 className="text-2xl font-bold text-white tracking-tight">KinShop</h3>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+              Điểm đến hàng đầu cho các sản phẩm công nghệ và phong cách sống cao cấp. Chúng tôi mang đến chất lượng và sự tinh tế trong từng sản phẩm.
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="hover:text-primary-500 transition-colors"><Facebook className="h-5 w-5" /></Link>
-              <Link href="#" className="hover:text-primary-500 transition-colors"><Twitter className="h-5 w-5" /></Link>
-              <Link href="#" className="hover:text-primary-500 transition-colors"><Instagram className="h-5 w-5" /></Link>
+              <Link href="#" className="text-slate-400 hover:text-primary-500 transition-colors"><Facebook className="h-5 w-5" /></Link>
+              <Link href="#" className="text-slate-400 hover:text-primary-500 transition-colors"><Twitter className="h-5 w-5" /></Link>
+              <Link href="#" className="text-slate-400 hover:text-primary-500 transition-colors"><Instagram className="h-5 w-5" /></Link>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Shop */}
           <div className="space-y-6">
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Shopping</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/products" className="hover:text-primary-500 transition-colors">All Products</Link></li>
-              <li><Link href="/categories" className="hover:text-primary-500 transition-colors">Categories</Link></li>
-              <li><Link href="/featured" className="hover:text-primary-500 transition-colors">Featured</Link></li>
-              <li><Link href="/discounts" className="hover:text-primary-500 transition-colors">Discount Codes</Link></li>
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Cửa hàng</h4>
+            <ul className="space-y-4">
+              <li><Link href="/products" className="text-sm text-slate-400 hover:text-white transition-colors">Tất cả sản phẩm</Link></li>
+              <li><Link href="/products?category=new" className="text-sm text-slate-400 hover:text-white transition-colors">Hàng mới về</Link></li>
+              <li><Link href="/products?category=featured" className="text-sm text-slate-400 hover:text-white transition-colors">Sản phẩm nổi bật</Link></li>
+              <li><Link href="/discounts" className="text-sm text-slate-400 hover:text-white transition-colors">Mã giảm giá</Link></li>
             </ul>
           </div>
 
           {/* Support */}
           <div className="space-y-6">
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Support</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/contact" className="hover:text-primary-500 transition-colors">Contact Us</Link></li>
-              <li><Link href="/faq" className="hover:text-primary-500 transition-colors">FAQs</Link></li>
-              <li><Link href="/shipping" className="hover:text-primary-500 transition-colors">Shipping Information</Link></li>
-              <li><Link href="/returns" className="hover:text-primary-500 transition-colors">Returns & Exchanges</Link></li>
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Hỗ trợ</h4>
+            <ul className="space-y-4">
+              <li><Link href="/about" className="text-sm text-slate-400 hover:text-white transition-colors">Về chúng tôi</Link></li>
+              <li><Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">Liên hệ</Link></li>
+              <li><Link href="/shipping" className="text-sm text-slate-400 hover:text-white transition-colors">Thông tin vận chuyển</Link></li>
+              <li><Link href="/returns" className="text-sm text-slate-400 hover:text-white transition-colors">Đổi trả & Hoàn tiền</Link></li>
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact */}
           <div className="space-y-6">
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Get in Touch</h4>
-            <ul className="space-y-3 text-sm">
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Liên hệ</h4>
+            <ul className="space-y-3 text-sm text-slate-400">
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-primary-500 mt-0.5" />
                 <span>123 eCommerce St, Digital City, DC 54321</span>
@@ -64,11 +62,11 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-slate-800 pt-8 mt-12 flex flex-col md:flex-row justify-between items-center text-xs">
-          <p>© 2026 KinShop Inc. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/privacy" className="hover:text-primary-500 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-primary-500 transition-colors">Terms of Service</Link>
+        <div className="mt-20 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-slate-500">
+          <p>© {new Date().getFullYear()} KinShop Commerce. Bảo lưu mọi quyền.</p>
+          <div className="flex space-x-6">
+            <Link href="/privacy" className="hover:text-white transition-colors">Chính sách bảo mật</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Điều khoản dịch vụ</Link>
           </div>
         </div>
       </div>

@@ -75,7 +75,7 @@ const ProductListingClient: React.FC<ProductListingClientProps> = ({ initialProd
       <div className="flex-1 space-y-8">
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <p className="text-sm font-medium text-slate-500">
-            Showing <span className="text-slate-900">{filteredProducts.length}</span> products
+            Hiển thị <span className="text-slate-900">{filteredProducts.length}</span> sản phẩm
           </p>
           <SortDropdown currentSort={sortOrder} onSortChange={setSortOrder} />
         </div>
@@ -88,7 +88,7 @@ const ProductListingClient: React.FC<ProductListingClientProps> = ({ initialProd
           </div>
         ) : (
           <div className="flex h-64 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center">
-            <p className="text-lg font-medium text-slate-600">No products match your filters.</p>
+            <p className="text-lg font-medium text-slate-600">Không tìm thấy sản phẩm nào phù hợp.</p>
             <button 
               onClick={() => {
                 setSearchQuery('');
@@ -97,7 +97,7 @@ const ProductListingClient: React.FC<ProductListingClientProps> = ({ initialProd
               }}
               className="mt-4 text-sm font-bold text-primary-600 hover:underline"
             >
-              Clear all filters
+              Xóa tất cả bộ lọc
             </button>
           </div>
         )}

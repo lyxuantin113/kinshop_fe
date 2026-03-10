@@ -22,30 +22,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize auth state
   useEffect(() => {
+    // Listen for unauthorized 401 errors from API
+    apiService.onUnauthorized(() => {
+      setUser(null);
+      localStorage.removeItem('user');
+      router.push('/login');
+    });
+
     const initAuth = async () => {
       try {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        if (!storedUser) {
+          setLoading(false);
+          return;
         }
+
+        setUser(JSON.parse(storedUser));
 
         // Try to refresh token on mount to restore session
         const response = await apiService.refreshToken();
-        if (response.data.data.accessToken) {
+        if (response.data?.data?.accessToken) {
           apiService.setAccessToken(response.data.data.accessToken);
-          // In a real app, you might want to fetch the current user profile here too
         }
-      } catch (error) {
+      } catch (error: any) {
+        // If refresh fails on mount, clear state and redirect
         console.error('Failed to restore session:', error);
         localStorage.removeItem('user');
         setUser(null);
+        router.push('/login');
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [router]);
 
   const login = async (data: any) => {
     const response = await apiService.login(data);
