@@ -20,7 +20,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ currentSort, onSortChange }
   return (
     <div className="relative inline-block text-left">
       <div className="flex items-center space-x-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Sort Bỳ:</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Sort By:</span>
         <select
           value={currentSort}
           onChange={(e) => onSortChange(e.target.value as SortOption)}

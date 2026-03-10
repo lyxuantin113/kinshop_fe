@@ -65,7 +65,7 @@ export const apiService = {
 
     // Categories
     getCategories: async () => {
-        const response = await apiClient.get<Category[]>('categories');
+        const response = await apiClient.get<PaginatedResponse<Category>>('categories');
         return response.data;
     },
 

@@ -52,7 +52,7 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({
           >
             All Categories
           </button>
-          {categories.map((cat) => (
+          {Array.isArray(categories) && categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => onCategoryChange(cat.id)}

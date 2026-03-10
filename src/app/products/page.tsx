@@ -25,9 +25,11 @@ export default async function ProductsPage() {
       apiService.getCategories(),
     ]);
     productsResponse = pRes;
-    categories = cRes;
+    categories = cRes.data || [];
   } catch (error) {
     console.error('[ProductsPage] Failed to fetch data:', error);
+    // Explicitly ensure categories is an array if fetch fails
+    categories = [];
   }
 
   return (
