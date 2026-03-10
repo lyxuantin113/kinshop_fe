@@ -5,6 +5,82 @@ import { Save, RefreshCw, Truck, CreditCard, Info, AlertCircle, CheckCircle2 } f
 import { apiService } from '@/services/api';
 import { SystemConfig } from '@/types/api';
 
+interface ConfigCardProps {
+  configKey: string;
+  title: string;
+  icon: React.ReactNode;
+  placeholder: string;
+  configs: SystemConfig[];
+  onUpdate: (key: string, value: string, description?: string) => Promise<void>;
+  isSaving: boolean;
+}
+
+function ConfigCard({ configKey, title, icon, placeholder, configs, onUpdate, isSaving }: ConfigCardProps) {
+  const getConfigValue = (key: string) => configs.find(c => c.key === key)?.value || '';
+  const getConfigDesc = (key: string) => configs.find(c => c.key === key)?.description || '';
+
+  const [localValue, setLocalValue] = useState(getConfigValue(configKey));
+  const [localDesc, setLocalDesc] = useState(getConfigDesc(configKey));
+
+  // Sync when data loads
+  useEffect(() => {
+    setLocalValue(getConfigValue(configKey));
+    setLocalDesc(getConfigDesc(configKey));
+  }, [configs, configKey]);
+
+  return (
+    <div className="group relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/40 transition-all hover:shadow-2xl hover:shadow-primary-500/10">
+      <div className="flex items-center space-x-4 mb-6">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{configKey}</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Current Value</label>
+          <input
+            type="text"
+            value={localValue}
+            onChange={(e) => setLocalValue(e.target.value)}
+            placeholder={placeholder}
+            className="w-full h-14 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-slate-900 font-bold outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 transition-all"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Description</label>
+          <textarea
+            value={localDesc}
+            onChange={(e) => setLocalDesc(e.target.value)}
+            placeholder="Provide a brief explanation of this setting..."
+            className="w-full rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-medium text-slate-600 outline-none focus:border-primary-500 focus:bg-white transition-all resize-none h-24"
+          />
+        </div>
+
+        <button
+          onClick={() => onUpdate(configKey, localValue, localDesc)}
+          disabled={isSaving}
+          className="btn-primary w-full h-12 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 group"
+        >
+          {isSaving ? (
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+              Save Changes
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSettingsPage() {
   const [configs, setConfigs] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +92,7 @@ export default function AdminSettingsPage() {
     try {
       setLoading(true);
       const response = await apiService.getAllConfigs();
-      setConfigs(response.data);
+      setConfigs(response);
     } catch (err: any) {
       setError('Failed to load system configurations.');
       console.error(err);
@@ -44,72 +120,6 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(null);
     }
-  };
-
-  const getConfigValue = (key: string) => configs.find(c => c.key === key)?.value || '';
-  const getConfigDesc = (key: string) => configs.find(c => c.key === key)?.description || '';
-
-  const renderConfigCard = (key: string, title: string, icon: React.ReactNode, placeholder: string) => {
-    const [localValue, setLocalValue] = useState(getConfigValue(key));
-    const [localDesc, setLocalDesc] = useState(getConfigDesc(key));
-
-    // Sync when data loads
-    useEffect(() => {
-      setLocalValue(getConfigValue(key));
-      setLocalDesc(getConfigDesc(key));
-    }, [configs, key]);
-
-    return (
-      <div className="group relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/40 transition-all hover:shadow-2xl hover:shadow-primary-500/10">
-        <div className="flex items-center space-x-4 mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-            {icon}
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{key}</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Current Value</label>
-            <input
-              type="text"
-              value={localValue}
-              onChange={(e) => setLocalValue(e.target.value)}
-              placeholder={placeholder}
-              className="w-full h-14 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-slate-900 font-bold outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 transition-all"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Description</label>
-            <textarea
-              value={localDesc}
-              onChange={(e) => setLocalDesc(e.target.value)}
-              placeholder="Provide a brief explanation of this setting..."
-              className="w-full rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-medium text-slate-600 outline-none focus:border-primary-500 focus:bg-white transition-all resize-none h-24"
-            />
-          </div>
-
-          <button
-            onClick={() => handleUpdate(key, localValue, localDesc)}
-            disabled={saving === key}
-            className="btn-primary w-full h-12 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 group"
-          >
-            {saving === key ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
-                Save Changes
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    );
   };
 
   if (loading) {
@@ -153,18 +163,24 @@ export default function AdminSettingsPage() {
 
       {/* Config Grid */}
       <div className="grid gap-8 lg:grid-cols-2">
-        {renderConfigCard(
-          'SHIPPING_BASE_FEE',
-          'Standard Shipping Fee',
-          <Truck className="h-6 w-6" />,
-          'e.g. 15.00'
-        )}
-        {renderConfigCard(
-          'SHIPPING_FREE_THRESHOLD',
-          'Free Shipping Threshold',
-          <CreditCard className="h-6 w-6" />,
-          'e.g. 500.00'
-        )}
+        <ConfigCard
+          configKey="SHIPPING_BASE_FEE"
+          title="Standard Shipping Fee"
+          icon={<Truck className="h-6 w-6" />}
+          placeholder="e.g. 15.00"
+          configs={configs}
+          onUpdate={handleUpdate}
+          isSaving={saving === 'SHIPPING_BASE_FEE'}
+        />
+        <ConfigCard
+          configKey="SHIPPING_FREE_THRESHOLD"
+          title="Free Shipping Threshold"
+          icon={<CreditCard className="h-6 w-6" />}
+          placeholder="e.g. 500.00"
+          configs={configs}
+          onUpdate={handleUpdate}
+          isSaving={saving === 'SHIPPING_FREE_THRESHOLD'}
+        />
       </div>
 
       {/* Info Notice */}

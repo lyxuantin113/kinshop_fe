@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, Star, Loader2, Check } from 'lucide-react';
 import { Product } from '@/types/api';
-import { formatVND } from '@/utils/format';
+import { formatCurrency } from '@/utils/format';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 
 interface ProductCardProps {
@@ -14,10 +15,11 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { refreshCart } = useCart();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
-  const primaryImage = product.images.find(img => img.isPrimary)?.url || product.images[0]?.url || '/placeholder.png';
+  const primaryImage = product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url || '/placeholder.png';
 
   const { user } = useAuth();
   const router = useRouter();
@@ -34,10 +36,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     try {
       setAdding(true);
       await apiService.addToCart(product.id, 1);
+      await refreshCart();
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', error);
+      console.error('Error adding to cart:', error);
     } finally {
       setAdding(false);
     }
@@ -54,12 +57,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         />
         {product.stock <= 5 && product.stock > 0 && (
           <span className="absolute left-2 top-2 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg">
-            Sắp hết hàng
+            Low Stock
           </span>
         )}
         {product.stock === 0 && (
           <span className="absolute inset-0 flex items-center justify-center bg-slate-900/60 text-sm font-bold text-white backdrop-blur-[2px]">
-            Hết hàng
+            Out of Stock
           </span>
         )}
       </Link>
@@ -67,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product Details */}
       <div className="flex flex-1 flex-col space-y-2 p-4">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Danh mục {product.categoryId.slice(0, 8)}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Category {product.categoryId.slice(0, 8)}</span>
           <div className="flex items-center text-accent-500">
             <Star className="h-3 w-3 fill-current" />
             <span className="ml-1 text-[10px] font-bold">4.8</span>
@@ -80,12 +83,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </h3>
         </Link>
         <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">
-          {product.description || 'Sản phẩm cao cấp chất lượng từ KinShop.'}
+          {product.description || 'Premium quality product from KinShop.'}
         </p>
 
         <div className="mt-auto flex items-center justify-between pt-2">
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-slate-900">{formatVND(product.price)}</span>
+            <span className="text-lg font-bold text-slate-900">{formatCurrency(Number(product.price))}</span>
           </div>
           <button
             onClick={handleAddToCart}

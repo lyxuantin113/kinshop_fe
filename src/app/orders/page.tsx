@@ -7,20 +7,20 @@ import { Package, Clock, CheckCircle2, Truck, XCircle, ChevronRight } from 'luci
 import { Metadata } from 'next';
 import { OrderStatus, Order } from '@/types/api';
 import Link from 'next/link';
-import { formatVND, formatDate } from '@/utils/format';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 export const metadata: Metadata = {
-  title: 'Lịch sử đơn hàng | KinShop',
-  description: 'Theo dõi các đơn hàng cao cấp của bạn và xem lịch sử mua hàng tại KinShop.',
+  title: 'Order History | KinShop',
+  description: 'Track your premium orders and view your purchase history at KinShop.',
 };
 
 const StatusBadge = ({ status }: { status: OrderStatus }) => {
   const configs = {
-    [OrderStatus.PENDING]: { icon: Clock, color: 'text-amber-600 bg-amber-50 border-amber-100', label: 'Đang xử lý' },
-    [OrderStatus.PAID]: { icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-100', label: 'Đã thanh toán' },
-    [OrderStatus.SHIPPED]: { icon: Truck, color: 'text-primary-600 bg-primary-50 border-primary-100', label: 'Đang giao hàng' },
-    [OrderStatus.DELIVERED]: { icon: CheckCircle2, color: 'text-emerald-700 bg-emerald-100 border-emerald-200', label: 'Đã giao' },
-    [OrderStatus.CANCELLED]: { icon: XCircle, color: 'text-red-600 bg-red-50 border-red-100', label: 'Đã hủy' },
+    [OrderStatus.PENDING]: { icon: Clock, color: 'text-amber-600 bg-amber-50 border-amber-100', label: 'Pending' },
+    [OrderStatus.PAID]: { icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-100', label: 'Paid' },
+    [OrderStatus.SHIPPED]: { icon: Truck, color: 'text-primary-600 bg-primary-50 border-primary-100', label: 'Shipped' },
+    [OrderStatus.DELIVERED]: { icon: CheckCircle2, color: 'text-emerald-700 bg-emerald-100 border-emerald-200', label: 'Delivered' },
+    [OrderStatus.CANCELLED]: { icon: XCircle, color: 'text-red-600 bg-red-50 border-red-100', label: 'Cancelled' },
   };
 
   const config = configs[status];
@@ -34,14 +34,9 @@ const StatusBadge = ({ status }: { status: OrderStatus }) => {
   );
 };
 
-export default async function OrderHistoryPage() {
-  let orders: Order[] = [];
-  try {
-    orders = await apiService.getMyOrders();
-  } catch (error) {
-    console.error('Lỗi khi tải đơn hàng:', error);
-  }
+import OrderHistoryClient from './OrderHistoryClient';
 
+export default async function OrderHistoryPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Header />
@@ -49,84 +44,13 @@ export default async function OrderHistoryPage() {
       <main className="flex-1 py-12 lg:py-20">
         <div className="container-custom">
           <div className="mb-12 space-y-4">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">Lịch sử đơn hàng</h1>
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">Order History</h1>
             <p className="max-w-2xl text-lg text-slate-500">
-              Theo dõi các đơn hàng hiện tại và xem lại nhật ký mua sắm cao cấp của bạn.
+              Track your current orders and review your premium shopping journals.
             </p>
           </div>
 
-          {orders.length > 0 ? (
-            <div className="space-y-6">
-              {orders.map((order) => (
-                <div key={order.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-primary-500/5">
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
-                        <Package className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Mã đơn hàng</h3>
-                        <p className="font-bold text-slate-900">#{order.id.slice(0, 8).toUpperCase()}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-                      <div>
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ngày đặt</h4>
-                        <p className="text-sm font-bold text-slate-900">{formatDate(order.createdAt)}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng tiền</h4>
-                        <p className="text-sm font-bold text-slate-900">{formatVND(order.totalAmount)}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sản phẩm</h4>
-                        <p className="text-sm font-bold text-slate-900">{order.items.length}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Trạng thái</h4>
-                        <StatusBadge status={order.status} />
-                      </div>
-                    </div>
-
-                    <Link 
-                      href={`/orders/${order.id}`}
-                      className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 transition-all hover:border-primary-600 hover:text-primary-600 group-hover:bg-slate-50"
-                    >
-                      Chi tiết
-                      <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                  </div>
-                  
-                  {/* Order Preview Items */}
-                  <div className="mt-6 flex flex-wrap gap-4 border-t border-slate-100 pt-6">
-                     {order.items.slice(0, 4).map((item, idx) => (
-                        <div key={idx} className="flex items-center space-x-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
-                           <span className="text-xs font-bold text-slate-900">{item.productName}</span>
-                           <span className="text-[10px] font-black text-slate-400">×{item.quantity}</span>
-                        </div>
-                     ))}
-                     {order.items.length > 4 && (
-                        <div className="flex items-center rounded-lg border border-slate-100 bg-slate-100 px-3 py-1.5">
-                           <span className="text-[10px] font-bold text-slate-500">+{order.items.length - 4} thêm</span>
-                        </div>
-                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white">
-              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                <Package className="h-12 w-12" />
-              </div>
-              <h2 className="text-2xl font-extrabold text-slate-900">Chưa có đơn hàng nào</h2>
-              <p className="mt-2 text-slate-500">Bạn chưa thực hiện bất kỳ giao dịch nào với KinShop.</p>
-              <Link href="/products" className="btn-primary mt-8 px-8 py-3 h-auto text-white">
-                Khám phá sản phẩm
-              </Link>
-            </div>
-          )}
+          <OrderHistoryClient />
         </div>
       </main>
 

@@ -12,15 +12,15 @@ interface SortDropdownProps {
 
 const SortDropdown: React.FC<SortDropdownProps> = ({ currentSort, onSortChange }) => {
   const options = [
-    { value: 'newest', label: 'Mới nhất' },
-    { value: 'price-asc', label: 'Giá: Thấp đến Cao' },
-    { value: 'price-desc', label: 'Giá: Cao đến Thấp' },
+    { value: 'newest', label: 'Newest' },
+    { value: 'price-asc', label: 'Price: Low to High' },
+    { value: 'price-desc', label: 'Price: High to Low' },
   ];
 
   return (
     <div className="relative inline-block text-left">
       <div className="flex items-center space-x-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Sắp xếp:</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Sort by:</span>
         <select
           value={currentSort}
           onChange={(e) => onSortChange(e.target.value as SortOption)}

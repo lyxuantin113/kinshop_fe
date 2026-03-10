@@ -37,19 +37,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        setUser(JSON.parse(storedUser));
-
         // Try to refresh token on mount to restore session
-        const response = await apiService.refreshToken();
-        if (response.data?.data?.accessToken) {
-          apiService.setAccessToken(response.data.data.accessToken);
+        const token = await apiService.refreshToken();
+        if (token) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          localStorage.removeItem('user');
+          setUser(null);
+          router.push('/login');
         }
       } catch (error: any) {
-        // If refresh fails on mount, clear state and redirect
         console.error('Failed to restore session:', error);
-        localStorage.removeItem('user');
-        setUser(null);
-        router.push('/login');
+        // Only wipe if definitively unauthorized
+        if (error.response?.status === 401 || error.response?.status === 400) {
+          localStorage.removeItem('user');
+          setUser(null);
+          router.push('/login');
+        } else {
+          // Transient error: keep the user state so the UI doesn't flicker/logout
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) setUser(JSON.parse(storedUser));
+        }
       } finally {
         setLoading(false);
       }
@@ -60,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (data: any) => {
     const response = await apiService.login(data);
-    const userData = response.data.user;
+    const userData = response.user;
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
     router.push('/');

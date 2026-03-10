@@ -27,14 +27,14 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({
     <aside className="w-full lg:w-64 flex flex-col space-y-8">
       {/* Search */}
       <div className="space-y-3">
-        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Tìm kiếm</h4>
+        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Search</h4>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Tên sản phẩm..."
+            placeholder="Product name..."
             className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
           />
         </div>
@@ -42,7 +42,7 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({
 
       {/* Categories */}
       <div className="space-y-3">
-        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Danh mục</h4>
+        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Categories</h4>
         <div className="flex flex-col space-y-1">
           <button
             onClick={() => onCategoryChange('')}
@@ -50,7 +50,7 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({
               selectedCategory === '' ? 'bg-primary-50 text-primary-600' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            Tất cả danh mục
+            All Categories
           </button>
           {Array.isArray(categories) && categories.map((cat) => (
             <button
@@ -68,11 +68,11 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({
 
       {/* Price Filter */}
       <div className="space-y-3">
-        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Khoảng giá</h4>
+        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">Price Range</h4>
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
             <div className="flex-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400">Từ</label>
+              <label className="text-[10px] font-bold uppercase text-slate-400">From</label>
               <input
                 type="number"
                 value={priceRange[0]}
@@ -81,7 +81,7 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({
               />
             </div>
             <div className="flex-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400">Đến</label>
+              <label className="text-[10px] font-bold uppercase text-slate-400">To</label>
               <input
                 type="number"
                 value={priceRange[1]}

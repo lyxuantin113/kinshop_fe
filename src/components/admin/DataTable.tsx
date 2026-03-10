@@ -31,6 +31,11 @@ interface DataTableProps<T> {
   onDelete?: (item: T) => void;
   onPrint?: (item: T) => void;
   onView?: (item: T) => void;
+  // Pagination
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export default function DataTable<T extends { id: string | number }>({ 
@@ -42,8 +47,37 @@ export default function DataTable<T extends { id: string | number }>({
   onEdit,
   onDelete,
   onPrint,
-  onView
+  onView,
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  onPageChange
 }: DataTableProps<T>) {
+  const itemsPerPage = 20; // Default or calculated
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const renderPageButtons = () => {
+    const buttons = [];
+    for (let i = 1; i <= totalPages; i++) {
+        const isActive = i === currentPage;
+        buttons.push(
+            <button
+                key={i}
+                onClick={() => onPageChange?.(i)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border text-xs font-bold transition-all ${
+                    isActive 
+                    ? 'border-primary-500 bg-primary-500 text-white ring-4 ring-primary-500/20' 
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+                {i}
+            </button>
+        );
+    }
+    return buttons;
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Table Header */}
@@ -98,7 +132,9 @@ export default function DataTable<T extends { id: string | number }>({
                     {col.header}
                   </th>
                 ))}
-                <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-slate-400">Actions</th>
+                {(onAdd || onEdit || onDelete || onPrint || onView) && (
+                  <th className="px-6 py-5 text-right text-xs font-black uppercase tracking-widest text-slate-400">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -108,12 +144,14 @@ export default function DataTable<T extends { id: string | number }>({
                     {columns.map((_, idx) => (
                       <td key={idx} className="px-6 py-4"><div className="h-4 w-full rounded bg-slate-100"></div></td>
                     ))}
-                    <td className="px-6 py-4"><div className="ml-auto h-4 w-20 rounded bg-slate-100"></div></td>
+                    {(onAdd || onEdit || onDelete || onPrint || onView) && (
+                      <td className="px-6 py-4"><div className="ml-auto h-4 w-20 rounded bg-slate-100"></div></td>
+                    )}
                   </tr>
                 ))
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length + 1} className="py-20 text-center font-display text-slate-400 italic">No records found.</td>
+                  <td colSpan={columns.length + ((onAdd || onEdit || onDelete || onPrint || onView) ? 1 : 0)} className="py-20 text-center font-display text-slate-400 italic">No records found.</td>
                 </tr>
               ) : (
                 data.map((item) => (
@@ -123,8 +161,9 @@ export default function DataTable<T extends { id: string | number }>({
                         {typeof col.accessor === 'function' ? col.accessor(item) : (item[col.accessor] as React.ReactNode)}
                       </td>
                     ))}
-                    <td className="px-6 py-5 text-right">
-                      <div className="flex items-center justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {(onAdd || onEdit || onDelete || onPrint || onView) && (
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex items-center justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {onView && (
                           <button onClick={() => onView(item)} className="p-2 text-slate-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 transition-all">
                             <Eye className="h-4 w-4" />
@@ -147,6 +186,7 @@ export default function DataTable<T extends { id: string | number }>({
                         )}
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -156,18 +196,25 @@ export default function DataTable<T extends { id: string | number }>({
 
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-slate-50 bg-slate-50/30 px-6 py-4">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Showing 1 to 10 of 42 results</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Showing {totalItems > 0 ? startItem : 0} to {endItem} of {totalItems} results
+          </p>
           <div className="flex items-center space-x-2">
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50">
+            <button 
+                disabled={currentPage <= 1}
+                onClick={() => onPageChange?.(currentPage - 1)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50 hover:bg-slate-50 transition-colors"
+            >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary-500 bg-primary-500 text-white font-bold text-xs ring-4 ring-primary-500/20">
-              1
-            </button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 font-bold text-xs hover:bg-slate-50">
-              2
-            </button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50">
+            
+            {renderPageButtons()}
+
+            <button 
+                disabled={currentPage >= totalPages}
+                onClick={() => onPageChange?.(currentPage + 1)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50 hover:bg-slate-50 transition-colors"
+            >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

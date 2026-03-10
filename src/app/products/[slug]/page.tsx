@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { apiService } from '@/services/api';
-import { Star, Truck, ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react';
+import { Star, Truck, ShieldCheck, ArrowLeft, Loader2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import ProductDetailClient from './ProductDetailClient';
 
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   } catch {
     return {
-      title: 'Sản phẩm | KinShop',
+      title: 'Product | KinShop',
     };
   }
 }
@@ -38,8 +38,8 @@ export default async function ProductPage({ params }: Props) {
               <Header />
               <main className="flex flex-1 items-center justify-center py-20">
                 <div className="text-center">
-                  <h1 className="text-2xl font-bold text-slate-900">Không tìm thấy sản phẩm</h1>
-                  <Link href="/products" className="mt-4 inline-block text-primary-600 hover:underline"> Quay lại cửa hàng </Link>
+                  <h1 className="text-2xl font-bold text-slate-900">Product not found</h1>
+                  <Link href="/products" className="mt-4 inline-block text-primary-600 hover:underline"> Back to shop </Link>
                 </div>
               </main>
               <Footer />
@@ -54,9 +54,9 @@ export default async function ProductPage({ params }: Props) {
         <main className="flex-1 container-custom py-12">
           {/* Breadcrumbs */}
           <nav className="mb-8 flex items-center space-x-2 text-sm font-medium text-slate-500">
-            <Link href="/" className="hover:text-primary-600">Trang chủ</Link>
-            <span>/</span>
-            <Link href="/products" className="hover:text-primary-600">Sản phẩm</Link>
+            <Link href="/" className="hover:text-primary-600">Home</Link>
+            <ChevronRight className="h-4 w-4" />
+            <Link href="/products" className="hover:text-primary-600">Products</Link>
             <span>/</span>
             <span className="text-slate-900 font-bold truncate max-w-[200px]">{product.name}</span>
           </nav>
@@ -68,15 +68,15 @@ export default async function ProductPage({ params }: Props) {
       </div>
     );
   } catch (error) {
-    console.error('Lỗi khi tải trang sản phẩm:', error);
+    console.error('Error loading product page:', error);
     return (
       <div className="flex min-h-screen flex-col bg-slate-50">
         <Header />
         <main className="flex flex-1 items-center justify-center py-20">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900">Đã có lỗi xảy ra</h1>
-            <p className="mt-2 text-slate-500">Chúng tôi không thể tải được thông tin sản phẩm vào lúc này.</p>
-            <Link href="/products" className="mt-4 inline-block text-primary-600 hover:underline"> Quay lại cửa hàng </Link>
+          <div className="py-20 text-center">
+            <h1 className="text-2xl font-bold text-slate-900">An error occurred</h1>
+            <p className="mt-2 text-slate-500">We could not load the product information at this time.</p>
+            <Link href="/products" className="mt-4 inline-block text-primary-600 hover:underline"> Back to shop </Link>
           </div>
         </main>
         <Footer />

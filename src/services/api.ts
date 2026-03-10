@@ -23,13 +23,13 @@ export const apiService = {
 
     // Auth
     register: async (data: any) => {
-        const response = await apiClient.post<AuthResponse>('users/register', data);
+        const response = await apiClient.post<any>('users/register', data);
         return response.data;
     },
 
     login: async (data: any) => {
-        const response = await apiClient.post<AuthResponse>('users/login', data);
-        accessToken = response.data.data.accessToken;
+        const response = await apiClient.post<any>('users/login', data);
+        accessToken = response.data.accessToken;
         return response.data;
     },
 
@@ -39,13 +39,31 @@ export const apiService = {
     },
 
     refreshToken: async () => {
-        return apiClient.post<RefreshResponse>('users/refresh');
+        if (refreshPromise) return refreshPromise;
+
+        refreshPromise = apiClient.post<RefreshResponse>('users/refresh', {}, { _skipInterceptor: true } as any)
+            .then(res => {
+                // Handle both wrapped and unwrapped response just in case
+                const token = res.data?.data?.accessToken || (res.data as any)?.accessToken;
+                accessToken = token || null;
+                refreshPromise = null;
+                return accessToken;
+            })
+            .catch(err => {
+                accessToken = null;
+                refreshPromise = null;
+                throw err;
+            });
+
+        return refreshPromise;
     },
+
+    getAccessToken: () => accessToken,
 
     // Products
     getProducts: async (filters: ProductFilters = {}) => {
         try {
-            const response = await apiClient.get<PaginatedResponse<Product>>('products', {
+            const response = await apiClient.get<any>('products', {
                 params: filters,
             });
             return response.data;
@@ -60,115 +78,157 @@ export const apiService = {
     },
 
     getProductBySlug: async (idOrSlug: string) => {
-        const response = await apiClient.get<{ data: Product }>(`products/${idOrSlug}`);
-        return response.data.data;
+        const response = await apiClient.get<any>(`products/${idOrSlug}`);
+        return response.data;
     },
 
     // Categories
-    getCategories: async () => {
-        const response = await apiClient.get<PaginatedResponse<Category>>('categories');
+    getCategories: async (params: { page?: number; limit?: number } = {}) => {
+        const response = await apiClient.get<any>('categories', { params });
         return response.data;
     },
 
     // Cart
     getCart: async () => {
-        const response = await apiClient.get<Cart>('cart');
+        const response = await apiClient.get<any>('cart');
         return response.data;
     },
 
     addToCart: async (productId: string, quantity: number) => {
-        const response = await apiClient.post('cart/add', { productId, quantity });
+        const response = await apiClient.post<any>('cart/add', { productId, quantity });
         return response.data;
     },
 
     updateCartItem: async (productId: string, quantity: number) => {
-        const response = await apiClient.patch(`cart/update/${productId}`, { quantity });
+        const response = await apiClient.patch<any>(`cart/update/${productId}`, { quantity });
         return response.data;
     },
 
     removeFromCart: async (productId: string) => {
-        const response = await apiClient.delete(`cart/remove/${productId}`);
+        const response = await apiClient.delete<any>(`cart/remove/${productId}`);
         return response.data;
     },
 
     clearCart: async () => {
-        const response = await apiClient.delete('cart/clear');
+        const response = await apiClient.delete<any>('cart/clear');
         return response.data;
     },
 
     // Orders
-    checkout: async (couponCode?: string) => {
-        const response = await apiClient.post('orders/checkout', { couponCode });
+    checkout: async (data: { phoneNumber: string; address: string; couponCode?: string }) => {
+        const response = await apiClient.post<any>('orders/checkout', data);
+        return response.data;
+    },
+
+    getAllOrders: async () => {
+        const response = await apiClient.get<any>('orders/admin/all');
         return response.data;
     },
 
     getMyOrders: async () => {
-        const response = await apiClient.get<Order[]>('orders/my-orders');
+        const response = await apiClient.get<any>('orders/my-orders');
         return response.data;
     },
 
     getOrderDetails: async (orderId: string) => {
-        const response = await apiClient.get<Order>(`orders/${orderId}`);
+        const response = await apiClient.get<any>(`orders/${orderId}`);
         return response.data;
     },
 
-    updateOrderStatus: async (orderId: string, status: string) => {
-        const response = await apiClient.patch(`orders/${orderId}/status`, { status });
+    async updateOrderStatus(orderId: string, status: string): Promise<Order> {
+        const response = await apiClient.patch(`/orders/admin/${orderId}/status`, { status });
+        return response.data;
+    },
+
+    async getAdminOrder(orderId: string): Promise<Order> {
+        const response = await apiClient.get(`/orders/admin/${orderId}`);
         return response.data;
     },
 
     // Admin - Products
     createProduct: async (data: any) => {
-        const response = await apiClient.post('products', data);
+        const response = await apiClient.post<any>('products', data);
+        return response.data;
+    },
+
+    uploadProductImages: async (formData: FormData) => {
+        const response = await apiClient.post<any>('products/upload-images', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     },
 
     updateProduct: async (id: string, data: any) => {
-        const response = await apiClient.patch(`products/${id}`, data);
+        const response = await apiClient.patch<any>(`products/${id}`, data);
         return response.data;
     },
 
     deleteProduct: async (id: string) => {
-        const response = await apiClient.delete(`products/${id}`);
+        const response = await apiClient.delete<any>(`products/${id}`);
         return response.data;
     },
 
     // Admin - Categories
     createCategory: async (data: any) => {
-        const response = await apiClient.post('categories', data);
+        const response = await apiClient.post<any>('categories', data);
         return response.data;
     },
 
     updateCategory: async (id: string, data: any) => {
-        const response = await apiClient.patch(`categories/${id}`, data);
+        const response = await apiClient.put<any>(`categories/${id}`, data);
         return response.data;
     },
 
     deleteCategory: async (id: string) => {
-        const response = await apiClient.delete(`categories/${id}`);
+        const response = await apiClient.delete<any>(`categories/${id}`);
+        return response.data;
+    },
+
+    // Admin - Users
+    getAllUsers: async (params: { page?: number; limit?: number } = {}) => {
+        const response = await apiClient.get<any>('users', { params });
+        return response.data;
+    },
+
+    deleteUser: async (id: string) => {
+        const response = await apiClient.delete<any>(`users/${id}`);
         return response.data;
     },
 
     // Admin - Discounts
     getDiscounts: async () => {
-        const response = await apiClient.get('discounts');
+        const response = await apiClient.get<any>('discounts');
+        return response.data;
+    },
+
+    createDiscount: async (data: any) => {
+        const response = await apiClient.post<any>('discounts', data);
+        return response.data;
+    },
+
+    updateDiscount: async (id: string, data: any) => {
+        const response = await apiClient.patch<any>(`discounts/${id}`, data);
+        return response.data;
+    },
+    deleteDiscount: async (id: string) => {
+        const response = await apiClient.delete<any>(`discounts/${id}`);
         return response.data;
     },
 
     // Admin - Stats
     getAdminStats: async () => {
-        const response = await apiClient.get('orders/stats');
+        const response = await apiClient.get<any>('orders/admin/stats');
         return response.data;
     },
 
     // Admin - System Config
     getAllConfigs: async () => {
-        const response = await apiClient.get<SystemConfigResponse>('system-configs');
+        const response = await apiClient.get<any>('system-configs');
         return response.data;
     },
 
     updateConfig: async (key: string, value: string, description?: string) => {
-        const response = await apiClient.patch(`system-configs/${key}`, { value, description });
+        const response = await apiClient.patch<any>(`system-configs/${key}`, { value, description });
         return response.data;
     },
 
@@ -185,33 +245,55 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     return config;
 });
 
-// Add Interceptor for Token Refresh
+// Add Interceptor for Token Refresh and Data Unwrapping
 apiClient.interceptors.response.use(
-    (response: AxiosResponse) => response,
+    (response: AxiosResponse) => {
+        // Skip for refresh calls
+        if ((response.config as any)._skipInterceptor) {
+            return response;
+        }
+
+        // Automatically unwrap the backend envelope { status, data }
+        if (response.data && response.data.status === 'success' && response.data.data !== undefined) {
+            return {
+                ...response,
+                data: response.data.data
+            };
+        }
+        return response;
+    },
     async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _skipInterceptor?: boolean };
+
+        // Prevent infinite loops or deadlocks on the refresh endpoint itself
+        if (originalRequest._skipInterceptor) {
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
-            if (!refreshPromise) {
-                refreshPromise = apiService.refreshToken()
-                    .then((res) => {
-                        accessToken = res.data.data.accessToken;
-                        refreshPromise = null;
-                        return accessToken;
-                    })
-                    .catch((err) => {
-                        accessToken = null;
-                        refreshPromise = null;
-                        if (onUnauthorizedCallback) onUnauthorizedCallback();
-                        return null;
-                    });
-            }
+            try {
+                if (!refreshPromise) {
+                    // If on server, skip refresh for now as we don't have cookies easily
+                    if (typeof window === 'undefined') {
+                        return Promise.reject(error);
+                    }
 
-            const newToken = await refreshPromise;
-            if (newToken && originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                return apiClient(originalRequest);
+                    // refreshPromise is handled by apiService.refreshToken()
+                    await apiService.refreshToken();
+                } else {
+                    await refreshPromise;
+                }
+
+                const newToken = apiService.getAccessToken();
+                if (newToken && originalRequest.headers) {
+                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    return apiClient(originalRequest);
+                }
+            } catch (err) {
+                if (onUnauthorizedCallback) onUnauthorizedCallback();
+                return Promise.reject(err);
             }
         }
         return Promise.reject(error);

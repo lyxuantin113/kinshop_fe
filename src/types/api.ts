@@ -37,10 +37,11 @@ export interface Product {
 export interface PaginatedResponse<T> {
     data: T[];
     meta: {
-        total: number;
-        page: number;
-        limit: number;
+        totalItems: number;
+        itemCount: number;
+        itemsPerPage: number;
         totalPages: number;
+        currentPage: number;
     };
 }
 
@@ -61,6 +62,10 @@ export interface Cart {
     id: string;
     userId: string;
     items: CartItem[];
+    summary?: {
+        totalItems: number;
+        totalPrice: number;
+    };
     createdAt: string;
     updatedAt: string;
 }
@@ -81,11 +86,14 @@ export enum OrderStatus {
 
 export interface Order {
     id: string;
+    userId: string;
     status: OrderStatus;
     subtotal: number;
     shippingFee: number;
     discountAmount: number;
     totalAmount: number;
+    phoneNumber: string;
+    address: string;
     items: OrderItem[];
     createdAt: string;
 }

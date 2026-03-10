@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { Product } from '@/types/api';
-import { formatVND } from '@/utils/format';
+import { formatCurrency } from '@/utils/format';
 import { apiService } from '@/services/api';
 import { Star, Truck, ShieldCheck, ShoppingCart, Loader2, Check, Minus, Plus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 
 interface ProductDetailClientProps {
@@ -13,6 +14,7 @@ interface ProductDetailClientProps {
 }
 
 const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) => {
+  const { refreshCart } = useCart();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -32,10 +34,11 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
     try {
       setAdding(true);
       await apiService.addToCart(product.id, quantity);
+      await refreshCart();
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', error);
+      console.error('Error adding to cart:', error);
     } finally {
       setAdding(false);
     }
@@ -72,12 +75,12 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
             <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 uppercase tracking-wider">
-              Chính hãng
+              Authentic
             </span>
             {product.stock > 0 ? (
-               <span className="text-xs font-medium text-emerald-600">● Còn hàng</span>
+               <span className="text-xs font-medium text-emerald-600">● In Stock</span>
             ) : (
-                <span className="text-xs font-medium text-red-500">● Hết hàng</span>
+                <span className="text-xs font-medium text-red-500">● Out of Stock</span>
             )}
           </div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">{product.name}</h1>
@@ -89,18 +92,18 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
               <span className="ml-2 text-sm font-bold text-slate-900">4.8 / 5.0</span>
             </div>
             <span className="text-sm font-medium text-slate-400">|</span>
-            <span className="text-sm font-medium text-slate-500">128 đánh giá</span>
+            <span className="text-sm font-medium text-slate-500">128 reviews</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-4xl font-extrabold text-primary-600">{formatVND(product.price)}</p>
-          <p className="text-sm text-slate-500 italic">* Đã bao gồm thuế và phí vận chuyển cơ bản.</p>
+          <p className="text-4xl font-extrabold text-primary-600">{formatCurrency(Number(product.price))}</p>
+          <p className="text-sm text-slate-500 italic">* Includes taxes and basic shipping fees.</p>
         </div>
 
         <div className="space-y-6 rounded-2xl border border-slate-100 bg-slate-50 p-6">
           <div className="space-y-4">
-              <label className="text-sm font-bold uppercase tracking-widest text-slate-400">Số lượng</label>
+              <label className="text-sm font-bold uppercase tracking-widest text-slate-400">Quantity</label>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">
                   <button 
@@ -118,7 +121,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
                     <Plus className="h-5 w-5" />
                   </button>
                 </div>
-                <span className="text-sm font-medium text-slate-500 italic">Còn {product.stock} trong kho</span>
+                <span className="text-sm font-medium text-slate-500 italic">{product.stock} in stock</span>
               </div>
           </div>
 
@@ -134,12 +137,12 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
             ) : added ? (
               <>
                 <Check className="mr-2 h-6 w-6" />
-                Đã thêm vào giỏ
+                Added to cart
               </>
             ) : (
               <>
                 <ShoppingCart className="mr-2 h-6 w-6" />
-                Thêm vào giỏ hàng
+                Add to Cart
               </>
             )}
           </button>
@@ -149,23 +152,23 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
             <div className="flex items-center space-x-3 rounded-xl border border-slate-100 p-4">
                 <Truck className="h-6 w-6 text-primary-600" />
                 <div>
-                    <p className="text-xs font-black uppercase text-slate-400">Giao hàng nhanh</p>
-                    <p className="text-sm font-bold text-slate-900">2 - 3 ngày làm việc</p>
+                    <p className="text-xs font-black uppercase text-slate-400">Fast Delivery</p>
+                    <p className="text-sm font-bold text-slate-900">2 - 3 business days</p>
                 </div>
             </div>
             <div className="flex items-center space-x-3 rounded-xl border border-slate-100 p-4">
                 <ShieldCheck className="h-6 w-6 text-emerald-500" />
                 <div>
-                    <p className="text-xs font-black uppercase text-slate-400">Bảo hành</p>
-                    <p className="text-sm font-bold text-slate-900">12 tháng sử dụng</p>
+                    <p className="text-xs font-black uppercase text-slate-400">Warranty</p>
+                    <p className="text-sm font-bold text-slate-900">12 months warranty</p>
                 </div>
             </div>
         </div>
 
         <div className="space-y-4 pt-4">
-          <h4 className="text-lg font-bold text-slate-900">Mô tả sản phẩm</h4>
+          <h4 className="text-lg font-bold text-slate-900">Product Description</h4>
           <p className="text-slate-600 leading-relaxed">
-            {product.description || 'Sản phẩm cao cấp được phân phối chính hãng bởi KinShop. Cam kết chất lượng và dịch vụ tốt nhất cho khách hàng.'}
+            {product.description || 'Premium quality product distributed by KinShop. We guarantee the best quality and service for our customers.'}
           </p>
         </div>
       </div>

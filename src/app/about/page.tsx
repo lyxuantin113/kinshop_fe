@@ -87,7 +87,27 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Section 4: History/Meet the Team */}
+        {/* Section 4: Why Choose Us (Stats) */}
+        <section className="py-24 bg-slate-900 text-white">
+           <div className="container-custom text-center space-y-16">
+              <h2 className="text-3xl lg:text-4xl font-extrabold">KinShop by the Numbers</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
+                 {[
+                    { label: 'Happy Customers', value: '50K+' },
+                    { label: 'Premium Brands', value: '450+' },
+                    { label: 'Global Offices', value: '12' },
+                    { label: '5-Star Reviews', value: '98%' }
+                 ].map((stat, i) => (
+                    <div key={i} className="space-y-2">
+                       <p className="text-5xl font-black text-primary-500">{stat.value}</p>
+                       <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{stat.label}</p>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </section>
+
+        {/* Section 5: History/Meet the Team */}
         <section className="py-24 bg-white overflow-hidden relative">
           <div className="container-custom">
              <div className="flex flex-col lg:flex-row items-center gap-16">
@@ -117,26 +137,6 @@ export default function AboutPage() {
                 </div>
              </div>
           </div>
-        </section>
-
-        {/* Section 5: Why Choose Us (Stats) */}
-        <section className="py-24 bg-slate-900 text-white">
-           <div className="container-custom text-center space-y-16">
-              <h2 className="text-3xl lg:text-4xl font-extrabold">KinShop by the Numbers</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
-                 {[
-                    { label: 'Happy Customers', value: '50K+' },
-                    { label: 'Premium Brands', value: '450+' },
-                    { label: 'Global Offices', value: '12' },
-                    { label: '5-Star Reviews', value: '98%' }
-                 ].map((stat, i) => (
-                    <div key={i} className="space-y-2">
-                       <p className="text-5xl font-black text-primary-500">{stat.value}</p>
-                       <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{stat.label}</p>
-                    </div>
-                 ))}
-              </div>
-           </div>
         </section>
       </main>
 

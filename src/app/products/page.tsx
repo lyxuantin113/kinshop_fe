@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function ProductsPage() {
   let productsResponse: PaginatedResponse<Product> = { 
     data: [], 
-    meta: { total: 0, page: 1, limit: 12, totalPages: 0 } 
+    meta: { totalItems: 0, itemCount: 0, itemsPerPage: 12, totalPages: 0, currentPage: 1 } 
   };
   let categories: Category[] = [];
 
@@ -25,7 +25,8 @@ export default async function ProductsPage() {
       apiService.getCategories(),
     ]);
     productsResponse = pRes;
-    categories = cRes.data || [];
+    // Categories API returns { data: Category[], meta: ... }
+    categories = Array.isArray(cRes) ? cRes : (cRes?.data || []);
   } catch (error) {
     console.error('[ProductsPage] Failed to fetch data:', error);
     // Explicitly ensure categories is an array if fetch fails
@@ -46,7 +47,7 @@ export default async function ProductsPage() {
           </div>
 
           <ProductListingClient 
-            initialProducts={productsResponse.data} 
+            initialData={productsResponse} 
             categories={categories} 
           />
         </div>

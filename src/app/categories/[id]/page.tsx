@@ -18,7 +18,7 @@ interface CategoryPageProps {
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
     const categories = await apiService.getCategories();
-    const category = categories.find(c => c.id === params.id);
+    const category = categories.find((c: any) => c.id === params.id);
     return {
       title: `${category?.name || 'Category'} | KinShop`,
       description: category?.description || `Browse our collection of ${category?.name} products.`,
@@ -36,7 +36,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   let productsResponse: PaginatedResponse<Product> = { 
     data: [], 
-    meta: { total: 0, page: 1, limit: 12, totalPages: 0 } 
+    meta: { totalItems: 0, currentPage: 1, itemsPerPage: 12, totalPages: 0, itemCount: 0 } 
   };
   let allCategories: Category[] = [];
 
@@ -46,10 +46,18 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       apiService.getCategories(),
     ]);
     productsResponse = pRes;
-    allCategories = cRes;
+    // Categories API returns { data: Category[], meta: ... }
+    allCategories = Array.isArray(cRes) ? cRes : (cRes?.data || []);
   } catch (error) {
     console.error('[CategoryPage] Failed to fetch data:', error);
   }
+
+  const products = Array.isArray(productsResponse) ? productsResponse : (productsResponse?.data || []);
+  const meta = Array.isArray(productsResponse) 
+    ? { total: products.length, page: 1, limit: 12, totalPages: 1 }
+    : (productsResponse?.meta || { totalItems: 0, currentPage: 1, itemsPerPage: 12, totalPages: 0 });
+
+  const totalItems = 'totalItems' in meta ? meta.totalItems : (meta as any).total;
 
   const currentCategory = allCategories.find(c => c.id === categoryId);
 
@@ -80,7 +88,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             
             <div className="flex items-center space-x-4">
               <span className="text-sm font-medium text-slate-500">
-                {productsResponse.meta.total} products found
+                {totalItems} products found
               </span>
               {/* Note: In a real app, SortDropdown would update URL params */}
               {/* For simplicity here, I'll just render it. Client-side sorting logic can be added if needed */}
@@ -88,15 +96,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {productsResponse.data.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
           {/* Pagination */}
-          {productsResponse.meta.totalPages > 1 && (
+          {meta.totalPages > 1 && (
             <div className="mt-16 flex items-center justify-center space-x-2">
-              {Array.from({ length: productsResponse.meta.totalPages }, (_, i) => i + 1).map((p) => (
+              {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
                 <Link
                   key={p}
                   href={`/categories/${categoryId}?page=${p}&sort=${sort}`}

@@ -29,6 +29,7 @@ const AdminSidebar = () => {
     { name: 'Categories', href: '/admin/categories', icon: Tag },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Discounts', href: '/admin/discounts', icon: Percent },
+    { name: 'Users', href: '/admin/users', icon: User },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 

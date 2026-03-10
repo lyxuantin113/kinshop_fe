@@ -6,13 +6,13 @@
   --color-primary-500: #0ea5e9;
   --color-primary-600: #0284c7;
   --color-primary-700: #0369a1;
-  
+
   --color-accent-500: #f59e0b;
   --color-accent-600: #d97706;
-  
+
   --color-background: #ffffff;
   --color-foreground: #0f172a;
-  
+
   --font-sans: "Inter", "system-ui", "sans-serif";
 }
 
@@ -26,8 +26,17 @@
   .container-custom {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
-  
+
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-600 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
