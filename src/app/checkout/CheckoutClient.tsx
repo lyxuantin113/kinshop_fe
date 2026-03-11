@@ -16,6 +16,7 @@ const CheckoutClient = () => {
   const [loading, setLoading] = useState(false);
   const [configs, setConfigs] = useState<{ fee: number; threshold: number }>({ fee: 50000, threshold: 1000000 });
   
+  const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [formError, setFormError] = useState('');
@@ -117,36 +118,39 @@ const CheckoutClient = () => {
           <div className="p-8 space-y-6">
              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                   <label htmlFor="fullName" className="text-sm font-bold text-slate-700">Họ và tên</label>
+                   <label htmlFor="fullName" className="text-sm font-bold text-slate-700">Name <span className="text-red-500">*</span></label>
                    <input 
                       id="fullName"
                       type="text" 
-                      value={user?.fullName || ''}
-                      disabled
+                      value={user?.fullName || fullName}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 outline-none"
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
                    />
                 </div>
                 <div className="space-y-2">
-                   <label htmlFor="phoneNumber" className="text-sm font-bold text-slate-700">Số điện thoại <span className="text-red-500">*</span></label>
+                   <label htmlFor="phoneNumber" className="text-sm font-bold text-slate-700">Phone Number <span className="text-red-500">*</span></label>
                    <input 
                       id="phoneNumber"
                       type="tel" 
-                      placeholder="Nhập số điện thoại"
+                      placeholder="Enter your phone number"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none transition-all"
+                      required
                    />
                 </div>
              </div>
              <div className="space-y-2">
-                <label htmlFor="address" className="text-sm font-bold text-slate-700">Địa chỉ giao hàng <span className="text-red-500">*</span></label>
+                <label htmlFor="address" className="text-sm font-bold text-slate-700">Address <span className="text-red-500">*</span></label>
                 <textarea 
                    id="address"
-                   placeholder="Nhập địa chỉ nhận hàng chi tiết"
+                   placeholder="Enter your address"
                    rows={3}
                    value={address}
                    onChange={(e) => setAddress(e.target.value)}
                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none transition-all resize-none"
+                   required
                 />
              </div>
              
@@ -157,7 +161,7 @@ const CheckoutClient = () => {
              )}
 
              <p className="text-xs text-slate-400 font-medium italic">
-                * Thông tin này sẽ được lưu cho lần mua hàng sau của bạn.
+                * This information will be saved for your next purchase.
              </p>
           </div>
         </section>
@@ -176,7 +180,7 @@ const CheckoutClient = () => {
                 </div>
                 <div>
                    <p className="font-bold text-slate-900">Cash on Delivery (COD)</p>
-                   <p className="text-xs text-slate-500">Thanh toán bằng tiền mặt khi nhận hàng</p>
+                   <p className="text-xs text-slate-500">Pay with cash when you receive your order</p>
                 </div>
              </div>
           </div>
