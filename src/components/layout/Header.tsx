@@ -10,7 +10,7 @@ import { Suspense } from 'react';
 
 const HeaderContent = () => {
   const { user, logout } = useAuth();
-  const { itemCount } = useCartStore();
+  const { itemCount, refreshCart } = useCartStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = React.useState(false);
@@ -20,6 +20,10 @@ const HeaderContent = () => {
     setMounted(true);
     setSearchValue(searchParams.get('search') || '');
   }, [searchParams]);
+
+  React.useEffect(() => {
+    if(user) refreshCart();
+  }, [user]);
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

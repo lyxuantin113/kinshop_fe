@@ -68,9 +68,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
       // We need a specific endpoint for upload or handle it in create/update
       // Backend has router.post('/upload-images', upload.array('images', 5), productController.uploadImages);
       const data = await apiService.uploadProductImages(formData);
-      setImageUrls(prev => [...prev, ...(data.urls || [])]);
+      setImageUrls(prev => [...prev, ...data]);
     } catch (err: any) {
-      setError('Tải ảnh lên thất bại. Vui lòng thử lại.');
+      setError('Failed to upload images. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -100,7 +100,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+      setError(err.response?.data?.message || 'An error occurred, please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,8 +111,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
       <div className="w-full max-w-2xl rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</h2>
-            <p className="text-slate-500 text-sm">Điền đầy đủ thông tin sản phẩm bên dưới.</p>
+            <h2 className="text-2xl font-bold text-slate-900">{product ? 'Edit Product' : 'Add New Product'}</h2>
+            <p className="text-slate-500 text-sm">Fill in the product information below.</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
             <X className="h-6 w-6" />
@@ -128,7 +128,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Tên sản phẩm</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Product Name</label>
               <input
                 required
                 type="text"
@@ -139,7 +139,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
                     setFormData({ ...formData, name, slug });
                 }}
                 className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 outline-none focus:border-primary-500 focus:bg-white transition-all font-bold"
-                placeholder="Ví dụ: iPhone 15 Pro Max"
+                placeholder="Example: iPhone 15 Pro Max"
               />
             </div>
             <div className="space-y-2">
@@ -155,19 +155,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Mô tả</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Description</label>
             <textarea
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 outline-none focus:border-primary-500 focus:bg-white transition-all"
-              placeholder="Mô tả ngắn về sản phẩm..."
+              placeholder="Short description about the product..."
             />
           </div>
 
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Giá bán ($)</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Price ($)</label>
               <input
                 required
                 type="number"
@@ -179,7 +179,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Tồn kho</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Stock</label>
               <input
                 required
                 type="number"
@@ -190,7 +190,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Danh mục</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
               <select
                 required
                 value={formData.categoryId}
@@ -205,7 +205,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
           </div>
 
           <div className="space-y-4">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Hình ảnh sản phẩm</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Product Images</label>
             <div className="grid grid-cols-4 gap-4">
                {imageUrls.map((url, idx) => (
                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-100 group">
@@ -234,14 +234,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
               onClick={onClose}
               className="flex-1 btn-secondary py-4 rounded-2xl font-bold"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
               disabled={loading || uploading}
               className="flex-[2] btn-primary py-4 rounded-2xl font-bold shadow-lg shadow-primary-500/30 flex items-center justify-center"
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : product ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : product ? 'Update Product' : 'Add Product'}
             </button>
           </div>
         </form>

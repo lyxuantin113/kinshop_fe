@@ -156,11 +156,11 @@ export const apiService = {
         return response.data as unknown as Product;
     },
 
-    uploadProductImages: async (formData: FormData): Promise<{ urls: string[] }> => {
-        const response = await apiClient.post<{ urls: string[] }>('products/upload-images', formData, {
+    uploadProductImages: async (formData: FormData): Promise<string[]> => {
+        const response = await apiClient.post<any>('products/upload-images', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
-        return response.data as unknown as { urls: string[] };
+        return response.data;
     },
 
     updateProduct: async (id: string, data: any): Promise<Product> => {
