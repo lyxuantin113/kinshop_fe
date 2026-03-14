@@ -83,7 +83,7 @@ export const apiService = {
     },
 
     // Categories
-    getCategories: async (params: { page?: number; limit?: number } = {}) => {
+    getCategories: async (params: { page?: number; limit?: number; search?: string } = {}) => {
         const response = await apiClient.get<any>('categories', { params });
         return response.data;
     },
@@ -185,7 +185,7 @@ export const apiService = {
     },
 
     // Admin - Users
-    getAllUsers: async (params: { page?: number; limit?: number } = {}) => {
+    getAllUsers: async (params: { page?: number; limit?: number; search?: string } = {}) => {
         const response = await apiClient.get<any>('users', { params });
         return response.data;
     },

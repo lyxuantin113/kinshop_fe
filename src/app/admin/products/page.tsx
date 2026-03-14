@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useDeferredValue } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { Product, Category } from '@/types/api';
@@ -12,17 +12,19 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   
   // Pagination state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const fetchData = async (currentPage: number = 1) => {
+  const fetchData = async (currentPage: number = 1, search: string = '') => {
     try {
       setLoading(true);
       const [productsRes, categoriesRes] = await Promise.all([
-        apiService.getProducts({ page: currentPage, limit: 20 }),
+        apiService.getProducts({ page: currentPage, limit: 20, search }),
         apiService.getCategories()
       ]);
       
@@ -40,8 +42,8 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
-    fetchData(page);
-  }, [page]);
+    fetchData(page, deferredSearchQuery);
+  }, [page, deferredSearchQuery]);
 
   const getCategoryName = (id: string) => {
     return categories.find(c => c.id === id)?.name || 'Unknown';
@@ -132,6 +134,8 @@ export default function AdminProductsPage() {
         totalPages={totalPages}
         totalItems={totalItems}
         onPageChange={(p) => setPage(p)}
+        searchQuery={searchQuery}
+        onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
       />
       <ProductModal 
         isOpen={isModalOpen}

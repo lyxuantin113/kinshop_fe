@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, CreditCard, Truck, ShieldCheck, ArrowRight, Loader2, ChevronLeft } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
+import { useCartStore } from '@/store/useCartStore';
 import { useAuth } from '@/context/AuthContext';
 import { apiService } from '@/services/api';
 import { formatCurrency } from '@/utils/format';
 import Link from 'next/link';
 
 const CheckoutClient = () => {
-  const { cart, refreshCart, loading: cartLoading } = useCart();
+  const { cart, refreshCart, loading: cartLoading } = useCartStore();
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);

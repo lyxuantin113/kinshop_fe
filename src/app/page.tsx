@@ -1,5 +1,5 @@
 import React from 'react';
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // ISR Optimization: Revalidate every 60 seconds
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 import { Cart, CartItem } from '@/types/api';
 import { apiService } from '@/services/api';
-import { useCart } from '@/context/CartContext';
+import { useCartStore } from '@/store/useCartStore';
 import { formatCurrency } from '@/utils/format';
 import { useRouter } from 'next/navigation';
 
@@ -14,7 +14,7 @@ interface CartClientProps {
 }
 
 const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
-  const { cart: contextCart, refreshCart, loading: cartLoading } = useCart();
+  const { cart: contextCart, refreshCart, loading: cartLoading } = useCartStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 

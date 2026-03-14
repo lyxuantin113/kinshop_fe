@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useDeferredValue } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { Category } from '@/types/api';
@@ -11,16 +11,18 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const fetchData = async (currentPage: number = 1) => {
+  const fetchData = async (currentPage: number = 1, search: string = '') => {
     try {
       setLoading(true);
-      const response = await apiService.getCategories({ page: currentPage, limit: 20 });
+      const response = await apiService.getCategories({ page: currentPage, limit: 20, search });
       // Correctly extract data from paginated response
       setCategories(response.data);
       setTotalPages(response.meta.totalPages);
@@ -33,8 +35,8 @@ export default function AdminCategoriesPage() {
   };
 
   useEffect(() => {
-    fetchData(page);
-  }, [page]);
+    fetchData(page, deferredSearchQuery);
+  }, [page, deferredSearchQuery]);
 
   const columns = [
     {
@@ -67,7 +69,7 @@ export default function AdminCategoriesPage() {
     if (confirm(`Bạn có chắc muốn xóa danh mục ${c.name}?`)) {
       try {
         await apiService.deleteCategory(c.id);
-        fetchData(page);
+        fetchData(page, deferredSearchQuery);
       } catch (error) {
         alert('Xóa danh mục thất bại');
       }
@@ -88,11 +90,13 @@ export default function AdminCategoriesPage() {
         totalPages={totalPages}
         totalItems={totalItems}
         onPageChange={(p) => setPage(p)}
+        searchQuery={searchQuery}
+        onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
       />
       <CategoryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => fetchData(page)}
+        onSuccess={() => fetchData(page, deferredSearchQuery)}
         category={selectedCategory}
       />
     </>

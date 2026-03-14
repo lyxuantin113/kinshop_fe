@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useDeferredValue } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { User } from '@/types/api';
@@ -10,16 +10,18 @@ import { User as UserIcon, Shield, Mail } from 'lucide-react';
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   
   // Pagination state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const fetchUsers = async (currentPage: number = 1) => {
+  const fetchUsers = async (currentPage: number = 1, search: string = '') => {
     try {
       setLoading(true);
-      const res = await apiService.getAllUsers({ page: currentPage, limit: 20 });
+      const res = await apiService.getAllUsers({ page: currentPage, limit: 20, search });
       setUsers(res.data);
       setTotalPages(res.meta.totalPages);
       setTotalItems(res.meta.totalItems);
@@ -31,14 +33,14 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    fetchUsers(page);
-  }, [page]);
+    fetchUsers(page, deferredSearchQuery);
+  }, [page, deferredSearchQuery]);
 
   const handleDelete = async (user: User) => {
     if (confirm(`Bạn có chắc muốn xóa người dùng ${user.fullName}?`)) {
       try {
         await apiService.deleteUser(user.id);
-        fetchUsers(page);
+        fetchUsers(page, deferredSearchQuery);
       } catch (error) {
         alert('Xóa người dùng thất bại');
       }
@@ -95,6 +97,8 @@ export default function AdminUsersPage() {
       totalPages={totalPages}
       totalItems={totalItems}
       onPageChange={(p) => setPage(p)}
+      searchQuery={searchQuery}
+      onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
     />
   );
 }

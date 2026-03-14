@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useDeferredValue, useMemo } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { Order, OrderStatus } from '@/types/api';
@@ -11,6 +11,19 @@ import { Eye, CheckCircle2, Truck, Package, XCircle } from 'lucide-react';
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const filteredOrders = useMemo(() => {
+    if (!deferredSearchQuery) return orders;
+    const lowerSearch = deferredSearchQuery.toLowerCase();
+    return orders.filter(o => 
+      o.id.toLowerCase().includes(lowerSearch) ||
+      ((o as any).user?.fullName || '').toLowerCase().includes(lowerSearch) ||
+      ((o as any).user?.email || '').toLowerCase().includes(lowerSearch) ||
+      o.status.toLowerCase().includes(lowerSearch)
+    );
+  }, [orders, deferredSearchQuery]);
 
   const STATUS_SEQUENCE = [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED];
 
@@ -144,9 +157,11 @@ export default function AdminOrdersPage() {
   return (
     <DataTable
       title="Quản lý đơn hàng"
-      data={orders}
+      data={filteredOrders}
       columns={columns}
       loading={loading}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
     />
   );
 }

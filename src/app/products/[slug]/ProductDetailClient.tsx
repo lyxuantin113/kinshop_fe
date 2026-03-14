@@ -6,7 +6,7 @@ import { formatCurrency } from '@/utils/format';
 import { apiService } from '@/services/api';
 import { Star, Truck, ShieldCheck, ShoppingCart, Loader2, Check, Minus, Plus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
+import { useCartStore } from '@/store/useCartStore';
 import { useRouter } from 'next/navigation';
 
 interface ProductDetailClientProps {
@@ -14,7 +14,7 @@ interface ProductDetailClientProps {
 }
 
 const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) => {
-  const { refreshCart } = useCart();
+  const { refreshCart } = useCartStore();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);

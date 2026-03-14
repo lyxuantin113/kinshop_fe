@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useDeferredValue, useMemo } from 'react';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { formatCurrency, formatDate } from '@/utils/format';
@@ -13,6 +13,18 @@ export default function AdminDiscountsPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState<any>(null);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const filteredDiscounts = useMemo(() => {
+    if (!deferredSearchQuery) return discounts;
+    const lowerSearch = deferredSearchQuery.toLowerCase();
+    return discounts.filter(d => 
+      d.code.toLowerCase().includes(lowerSearch) ||
+      (d.description || '').toLowerCase().includes(lowerSearch)
+    );
+  }, [discounts, deferredSearchQuery]);
 
   const fetchDiscounts = async () => {
     try {
@@ -124,12 +136,14 @@ export default function AdminDiscountsPage() {
     <>
       <DataTable
         title="Mã giảm giá"
-        data={discounts}
+        data={filteredDiscounts}
         columns={columns}
         loading={loading}
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       <DiscountModal
         isOpen={isModalOpen}

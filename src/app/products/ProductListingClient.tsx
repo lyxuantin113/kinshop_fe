@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import ProductSidebar from '@/components/products/ProductSidebar';
 import SortDropdown, { SortOption } from '@/components/products/SortDropdown';
 import ProductCard from '@/components/products/ProductCard';
@@ -22,79 +23,53 @@ const ProductListingContent: React.FC<ProductListingClientProps> = ({ initialDat
     ? initialCategories 
     : ((initialCategories as any)?.data || []);
 
-  const [products, setProducts] = useState<Product[]>(
-    Array.isArray(initialData) ? initialData : (initialData?.data || [])
-  );
-
-  const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
   
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [sortOrder, setSortOrder] = useState<SortOption>('newest');
   const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({
-    total: Array.isArray(initialData) ? initialData.length : (initialData?.meta?.totalItems || 0),
-    totalPages: Array.isArray(initialData) ? 1 : (initialData?.meta?.totalPages || 1)
-  });
 
-  const fetchProducts = useCallback(
-    _.debounce(async (filters: any) => {
-      try {
-        setLoading(true);
-        const response: any = await apiService.getProducts(filters);
-        console.log('[ProductListingClient] API Response:', response);
-        
-        // Handle both simple array and PaginatedResponse
-        if (Array.isArray(response)) {
-          setProducts(response);
-          setMeta({ total: response.length, totalPages: 1 });
-        } else {
-          // If response is { data, meta }, we use response.data
-          // Note: Interceptor already unwrapped the outer { status, data }
-          setProducts(response.data || []);
-          setMeta({
-            total: response.meta?.totalItems || 0,
-            totalPages: response.meta?.totalPages || 1
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-      } finally {
-        setLoading(false);
-      }
-    }, 500),
-    []
-  );
-
-  useEffect(() => {
-    const params: any = {
-      search: searchQuery,
-      page,
-      limit: 12,
-    };
-
-    if (selectedCategory) {
-      params.categoryId = selectedCategory;
-    }
-
-    fetchProducts(params);
-  }, [searchQuery, selectedCategory, page, fetchProducts]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, selectedCategory]);
-
-  // Sync searchQuery with URL params (for header search)
+  // Sync searchQuery with URL params
   useEffect(() => {
     const urlSearch = searchParams.get('search') || '';
     if (urlSearch !== searchQuery) {
       setSearchQuery(urlSearch);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedCategory]);
+
+  const { data: response, isLoading: loading } = useQuery({
+    queryKey: ['products', debouncedSearch, selectedCategory, page],
+    queryFn: () => apiService.getProducts({
+      search: debouncedSearch,
+      categoryId: selectedCategory || undefined,
+      page,
+      limit: 12,
+    }) as Promise<Product[] | PaginatedResponse<Product>>,
+    initialData: (page === 1 && !debouncedSearch && !selectedCategory) ? initialData as any : undefined,
+  });
+
+  const products = useMemo(() => Array.isArray(response) ? response : (response?.data || []), [response]);
+  
+  const meta = useMemo(() => ({
+    total: Array.isArray(response) ? response.length : (response?.meta?.totalItems || 0),
+    totalPages: Array.isArray(response) ? 1 : (response?.meta?.totalPages || 1)
+  }), [response]);
 
   const displayProducts = useMemo(() => {
     let result = [...products];

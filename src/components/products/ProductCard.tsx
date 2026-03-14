@@ -7,7 +7,7 @@ import { Product } from '@/types/api';
 import { formatCurrency } from '@/utils/format';
 import { apiService } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
+import { useCartStore } from '@/store/useCartStore';
 import { useRouter } from 'next/navigation';
 
 interface ProductCardProps {
@@ -15,7 +15,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { refreshCart } = useCart();
+  const { refreshCart } = useCartStore();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 

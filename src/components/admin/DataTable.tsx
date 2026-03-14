@@ -31,6 +31,8 @@ interface DataTableProps<T> {
   onDelete?: (item: T) => void;
   onPrint?: (item: T) => void;
   onView?: (item: T) => void;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
   // Pagination
   currentPage?: number;
   totalPages?: number;
@@ -48,6 +50,8 @@ export default function DataTable<T extends { id: string | number }>({
   onDelete,
   onPrint,
   onView,
+  searchQuery,
+  onSearchChange,
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
@@ -110,6 +114,8 @@ export default function DataTable<T extends { id: string | number }>({
           <input
             type="text"
             placeholder="Search..."
+            value={searchQuery !== undefined ? searchQuery : ''}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="w-full rounded-xl border border-slate-100 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:bg-white transition-all font-medium"
           />
         </div>

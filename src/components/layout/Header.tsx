@@ -4,13 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import { ShoppingCart, User, Search, Menu, LogOut, ShieldCheck, Package } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
+import { useCartStore } from '@/store/useCartStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 const HeaderContent = () => {
   const { user, logout } = useAuth();
-  const { itemCount } = useCart();
+  const { itemCount } = useCartStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = React.useState(false);
