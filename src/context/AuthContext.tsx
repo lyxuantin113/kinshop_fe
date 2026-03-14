@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           router.push('/login');
         }
       } catch (error: any) {
-        console.error('Failed to restore session:', error);
         // Only wipe if definitively unauthorized
         if (error.response?.status === 401 || error.response?.status === 400) {
           localStorage.removeItem('user');

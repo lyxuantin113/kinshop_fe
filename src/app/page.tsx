@@ -23,7 +23,7 @@ export default async function HomePage() {
   // Fetch initial data for SSR/ISR
   let products: Product[] = [];
   try {
-    const response = await apiService.getProducts({ limit: 8 });
+    const response = await apiService.getProducts({ limit: 9 });
     // apiService already unwraps the { status, data } via interceptor
     products = Array.isArray(response) ? response : (response?.data || []);
   } catch (error) {

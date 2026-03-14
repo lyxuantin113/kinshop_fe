@@ -93,8 +93,7 @@ export default function AdminSettingsPage() {
       const response = await apiService.getAllConfigs();
       setConfigs(response);
     } catch (err: any) {
-      toast.error('Failed to load system configurations.');
-      console.error(err);
+      toast.error(err.message || 'Failed to load system configurations.');
     } finally {
       setLoading(false);
     }
@@ -113,7 +112,6 @@ export default function AdminSettingsPage() {
       setConfigs(prev => prev.map(c => c.key === key ? { ...c, value, description } : c));
     } catch (err: any) {
       toast.error(err.message || `Failed to update ${key}.`);
-      console.error(err);
     } finally {
       setSaving(null);
     }

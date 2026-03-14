@@ -29,7 +29,7 @@ export default function AdminUsersPage() {
 
   const users = response?.data || [];
   const totalPages = response?.meta?.totalPages || 1;
-  const totalItems = response?.meta?.totalItems || 0;
+  const total = response?.meta?.total || 0;
 
   const confirmDelete = (user: User) => {
     setUserToDelete(user);
@@ -100,9 +100,9 @@ export default function AdminUsersPage() {
         columns={columns}
         loading={loading}
         onDelete={confirmDelete}
-        currentPage={page}
+        page={page}
         totalPages={totalPages}
-        totalItems={totalItems}
+        total={total}
         onPageChange={(p) => setPage(p)}
         searchQuery={searchQuery}
         onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}

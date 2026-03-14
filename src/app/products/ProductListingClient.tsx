@@ -60,7 +60,7 @@ const ProductListingContent: React.FC<ProductListingClientProps> = ({ initialDat
   const products = useMemo(() => Array.isArray(response) ? response : (response?.data || []), [response]);
   
   const meta = useMemo(() => ({
-    total: Array.isArray(response) ? response.length : (response?.meta?.totalItems || 0),
+    total: Array.isArray(response) ? response.length : (response?.meta?.total || 0),
     totalPages: Array.isArray(response) ? 1 : (response?.meta?.totalPages || 1)
   }), [response]);
 

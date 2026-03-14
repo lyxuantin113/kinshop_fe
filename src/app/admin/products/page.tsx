@@ -20,13 +20,13 @@ export default function AdminProductsPage() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  const [total, setTotal] = useState(0);
 
-  const fetchData = async (currentPage: number = 1, search: string = '') => {
+  const fetchData = async (page: number = 1, search: string = '') => {
     try {
       setLoading(true);
       const [productsRes, categoriesRes] = await Promise.all([
-        apiService.getProducts({ page: currentPage, limit: 20, search }),
+        apiService.getProducts({ page: page, limit: 20, search }),
         apiService.getCategories()
       ]);
       
@@ -34,7 +34,7 @@ export default function AdminProductsPage() {
       // categoriesRes.data as per CategoryService.getAllCategories return
       setProducts(productsRes.data);
       setTotalPages(productsRes.meta.totalPages);
-      setTotalItems(productsRes.meta.totalItems);
+      setTotal(productsRes.meta.total);
       setCategories(Array.isArray(categoriesRes) ? categoriesRes : (categoriesRes as any).data || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -148,9 +148,9 @@ export default function AdminProductsPage() {
         onEdit={handleEdit}
         onDelete={confirmDelete}
         onPrint={handlePrint}
-        currentPage={page}
+        page={page}
         totalPages={totalPages}
-        totalItems={totalItems}
+        total={total}
         onPageChange={(p) => setPage(p)}
         searchQuery={searchQuery}
         onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}

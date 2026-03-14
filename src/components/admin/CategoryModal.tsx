@@ -59,7 +59,6 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
     } catch (err: any) {
       const errorMsg = err.message || 'An error occurred, please try again.';
       setError(errorMsg);
-      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

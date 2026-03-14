@@ -34,9 +34,9 @@ interface DataTableProps<T> {
   searchQuery?: string;
   onSearchChange?: (val: string) => void;
   // Pagination
-  currentPage?: number;
+  page?: number;
   totalPages?: number;
-  totalItems?: number;
+  total?: number;
   onPageChange?: (page: number) => void;
 }
 
@@ -52,19 +52,19 @@ export default function DataTable<T extends { id: string | number }>({
   onView,
   searchQuery,
   onSearchChange,
-  currentPage = 1,
+  page = 1,
   totalPages = 1,
-  totalItems = 0,
+  total = 0,
   onPageChange
 }: DataTableProps<T>) {
-  const itemsPerPage = 20; // Default or calculated
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const limit = 20; // Default or calculated
+  const startItem = (page - 1) * limit + 1;
+  const endItem = Math.min(page * limit, total);
 
   const renderPageButtons = () => {
     const buttons = [];
     for (let i = 1; i <= totalPages; i++) {
-        const isActive = i === currentPage;
+        const isActive = i === page;
         buttons.push(
             <button
                 key={i}
@@ -203,12 +203,12 @@ export default function DataTable<T extends { id: string | number }>({
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-slate-50 bg-slate-50/30 px-6 py-4">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            Showing {totalItems > 0 ? startItem : 0} to {endItem} of {totalItems} results
+            Showing {total > 0 ? startItem : 0} to {endItem} of {total} results
           </p>
           <div className="flex items-center space-x-2">
             <button 
-                disabled={currentPage <= 1}
-                onClick={() => onPageChange?.(currentPage - 1)}
+                disabled={page <= 1}
+                onClick={() => onPageChange?.(page - 1)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50 hover:bg-slate-50 transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -217,8 +217,8 @@ export default function DataTable<T extends { id: string | number }>({
             {renderPageButtons()}
 
             <button 
-                disabled={currentPage >= totalPages}
-                onClick={() => onPageChange?.(currentPage + 1)}
+                disabled={page >= totalPages}
+                onClick={() => onPageChange?.(page + 1)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 disabled:opacity-50 hover:bg-slate-50 transition-colors"
             >
               <ChevronRight className="h-4 w-4" />

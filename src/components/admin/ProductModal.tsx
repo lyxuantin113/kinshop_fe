@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2, Upload, Plus } from 'lucide-react';
 import { Product, Category } from '@/types/api';
 import { apiService } from '@/services/api';
+import toast from 'react-hot-toast';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -100,7 +101,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred, please try again.');
+      const errorMsg = err.message || 'An error occurred, please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

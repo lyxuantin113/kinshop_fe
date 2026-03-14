@@ -31,7 +31,7 @@ export default function AdminCategoriesPage() {
 
   const categories = Array.isArray(response) ? response : (response as any)?.data || [];
   const totalPages = (response as any)?.meta?.totalPages || 1;
-  const totalItems = (response as any)?.meta?.totalItems || 0;
+  const total = (response as any)?.meta?.total || 0;
 
   const columns = [
     {
@@ -92,9 +92,9 @@ export default function AdminCategoriesPage() {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={confirmDelete}
-        currentPage={page}
+        page={page}
         totalPages={totalPages}
-        totalItems={totalItems}
+        total={total}
         onPageChange={(p) => setPage(p)}
         searchQuery={searchQuery}
         onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}

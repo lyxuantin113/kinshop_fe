@@ -41,10 +41,9 @@ export const apiService = {
     refreshToken: async () => {
         if (refreshPromise) return refreshPromise;
 
-        refreshPromise = apiClient.post<RefreshResponse>('users/refresh', {}, { _skipInterceptor: true } as any)
+        refreshPromise = apiClient.post<{ status: string, data: { accessToken: string } }>('users/refresh', {}, { _skipInterceptor: true } as any)
             .then(res => {
-                // Handle both wrapped and unwrapped response just in case
-                const token = res.data?.data?.accessToken || (res.data as any)?.accessToken;
+                const token = res.data?.data?.accessToken;
                 accessToken = token || null;
                 refreshPromise = null;
                 return accessToken;
@@ -68,11 +67,6 @@ export const apiService = {
             });
             return response.data as unknown as PaginatedResponse<Product>;
         } catch (error: any) {
-            console.error('[ApiService] getProducts error:', {
-                url: error.config?.url,
-                status: error.response?.status,
-                data: error.response?.data
-            });
             throw error;
         }
     },
@@ -125,9 +119,14 @@ export const apiService = {
         return response.data;
     },
 
-    getAllOrders: async (): Promise<{ status: string, orders: Order[], total: number }> => {
-        const response = await apiClient.get<any>('orders/admin/all');
-        return response.data;
+    getAllOrders: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<{ status: string, orders: Order[], total: number, totalPages: number }> => {
+        const response = await apiClient.get<any>('orders/admin/all', { params });
+        const data = response.data;
+        // If totalPages is missing, calculate it
+        if (data && data.total && !data.totalPages) {
+            data.totalPages = Math.ceil(data.total / (params.limit || 20));
+        }
+        return data;
     },
 
     getMyOrders: async (): Promise<Order[]> => {
@@ -258,8 +257,19 @@ apiClient.interceptors.response.use(
             return response;
         }
 
-        // Automatically unwrap the backend envelope { status, data }
+        // Automatically unwrap the backend envelope { status, data, meta }
         if (response.data && response.data.status === 'success' && response.data.data !== undefined) {
+            // If it has pagination meta, return it as a PaginatedResponse structure
+            if (response.data.meta) {
+                return {
+                    ...response,
+                    data: {
+                        data: response.data.data,
+                        meta: response.data.meta
+                    }
+                };
+            }
+            // Otherwise just return the data
             return {
                 ...response,
                 data: response.data.data
@@ -325,9 +335,5 @@ apiClient.interceptors.response.use(
         return Promise.reject(new Error(errorMessage));
     }
 );
-
-if (!process.env.NEXT_PUBLIC_API_URL && typeof window === 'undefined') {
-    console.warn('[ApiService] NEXT_PUBLIC_API_URL is not defined on the server! Falling back to localhost.');
-}
 
 export default apiService;

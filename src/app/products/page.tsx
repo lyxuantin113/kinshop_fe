@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function ProductsPage() {
   let productsResponse: PaginatedResponse<Product> = { 
     data: [], 
-    meta: { totalItems: 0, itemCount: 0, itemsPerPage: 12, totalPages: 0, currentPage: 1 } 
+    meta: { total: 0, page: 1, limit: 12, totalPages: 0 } 
   };
   let categories: Category[] = [];
 

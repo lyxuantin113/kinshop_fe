@@ -13,7 +13,7 @@ import { toast } from 'react-hot-toast';
 import { PreviewCheckoutResponse } from '@/types/api';
 
 const CheckoutClient = () => {
-  const { cart, refreshCart, loading: cartLoading } = useCartStore();
+  const { cart, refreshCart, loading: cartLoading, totalAmount: storeTotalAmount } = useCartStore();
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -66,13 +66,13 @@ const CheckoutClient = () => {
       setPreviewData(data);
       if (code) {
         setAppliedCoupon(code);
-        toast.success('Đã áp dụng mã giảm giá!');
+        toast.success('Discount applied successfully!');
       } else {
         setAppliedCoupon('');
       }
     } catch (error: any) {
       if (code) {
-        toast.error(error.response?.data?.message || error.message || 'Mã giảm giá không hợp lệ.');
+        toast.error(error.message || 'This coupon code is not valid.');
       }
       setAppliedCoupon('');
       setCouponCode('');
@@ -112,7 +112,10 @@ const CheckoutClient = () => {
       router.push(`/orders/${response.id || ''}`);
     } catch (error: any) {
       console.error('Checkout failed:', error);
-      toast.error(error.response?.data?.message || 'Failed to place order. Please try again.');
+      const errorMsg = error.message || 'Failed to place order. Please try again.';
+      toast.error(errorMsg);
+      setFormError(errorMsg);
+      setIsConfirmOpen(false); // Close modal to show form errors
     } finally {
       setLoading(false);
     }
@@ -141,11 +144,11 @@ const CheckoutClient = () => {
     );
   }
 
-  // Fallback to 0 if preview hasn't loaded yet
-  const subtotal = previewData?.subtotal || 0;
+  // Fallback to store totalAmount if preview hasn't loaded yet
+  const subtotal = previewData?.subtotal || storeTotalAmount || 0;
   const shipping = previewData?.shippingFee || 0;
   const discountVal = previewData?.discountAmount || 0;
-  const total = previewData?.totalAmount || 0;
+  const total = previewData?.totalAmount || (subtotal + shipping);
 
   return (
     <div className="grid gap-12 lg:grid-cols-5">
@@ -266,7 +269,7 @@ const CheckoutClient = () => {
               <div className="flex space-x-2">
                 <input 
                     type="text" 
-                    placeholder="Nhập mã giảm giá (nếu có)" 
+                    placeholder="Enter coupon code (if any)" 
                     value={couponCode}
                     onChange={e => setCouponCode(e.target.value)}
                     className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm uppercase transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none"
@@ -277,7 +280,7 @@ const CheckoutClient = () => {
                        onClick={() => { setAppliedCoupon(''); setCouponCode(''); loadPreview(); }}
                        className="rounded-xl bg-rose-50 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-100 transition-colors"
                    >
-                       Xóa mã
+                       Remove
                    </button>
                 ) : (
                    <button 
@@ -285,30 +288,30 @@ const CheckoutClient = () => {
                        disabled={checkingDiscount || !couponCode.trim()}
                        className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 transition-colors disabled:bg-slate-300 min-w-[80px]"
                    >
-                       {checkingDiscount ? <Loader2 className="h-4 w-4 animate-spin mx-auto"/> : 'Áp dụng'}
+                       {checkingDiscount ? <Loader2 className="h-4 w-4 animate-spin mx-auto"/> : 'Apply'}
                    </button>
                 )}
               </div>
             </div>
 
             <div className="flex justify-between text-sm text-slate-500 border-t border-slate-100 pt-4">
-              <span>Tạm tính</span>
+              <span>Subtotal</span>
               <span className="font-bold text-slate-900">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-slate-500">
-              <span>Phí vận chuyển</span>
+              <span>Shipping</span>
               <span className={`font-bold ${shipping === 0 ? 'text-emerald-500' : 'text-slate-900'}`}>
                 {shipping === 0 ? 'FREE' : formatCurrency(shipping)}
               </span>
             </div>
             {discountVal > 0 && (
               <div className="flex justify-between text-sm text-emerald-600">
-                <span>Giảm giá ({appliedCoupon})</span>
+                <span>Discount ({appliedCoupon})</span>
                 <span className="font-bold">-{formatCurrency(discountVal)}</span>
               </div>
             )}
             <div className="border-t border-slate-100 pt-4 flex justify-between">
-              <span className="text-lg font-bold text-slate-900">Tổng thanh toán</span>
+              <span className="text-lg font-bold text-slate-900">Total</span>
               <span className="text-2xl font-black text-primary-600">{formatCurrency(total)}</span>
             </div>
           </div>
@@ -339,22 +342,22 @@ const CheckoutClient = () => {
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handlePlaceOrder}
-        title="Xác nhận thanh toán"
+        title="Confirm Order"
         message={
           <div className="space-y-4">
-            <p>Vui lòng kiểm tra lại thông tin giao hàng:</p>
+            <p>Please review your order details:</p>
             <div className="rounded-xl bg-slate-50 p-4 space-y-2 border border-slate-100">
               <p className="text-sm font-bold text-slate-900">{user?.fullName || fullName}</p>
-              <p className="text-sm text-slate-600">SĐT: {phoneNumber}</p>
-              <p className="text-sm text-slate-600">Địa chỉ: {address}</p>
+              <p className="text-sm text-slate-600">Phone: {phoneNumber}</p>
+              <p className="text-sm text-slate-600">Address: {address}</p>
             </div>
             {appliedCoupon && (
-              <p className="text-sm text-emerald-600">Mã giảm giá đã áp dụng: <strong>{appliedCoupon.toUpperCase()}</strong> (-{formatCurrency(discountVal)})</p>
+              <p className="text-sm text-emerald-600">Discount applied: <strong>{appliedCoupon.toUpperCase()}</strong> (-{formatCurrency(discountVal)})</p>
             )}
-            <p>Tổng thanh toán: <strong className="text-primary-600 text-lg">{formatCurrency(total)}</strong></p>
+            <p>Total: <strong className="text-primary-600 text-lg">{formatCurrency(total)}</strong></p>
           </div>
         }
-        confirmText="Đặt hàng ngay"
+        confirmText="Place Order"
         isLoading={loading}
         isDestructive={false}
       />

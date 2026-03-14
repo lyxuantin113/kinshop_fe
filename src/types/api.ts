@@ -34,15 +34,16 @@ export interface Product {
     images: ProductImage[];
 }
 
+export interface PaginationMeta {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
+
 export interface PaginatedResponse<T> {
     data: T[];
-    meta: {
-        totalItems: number;
-        itemCount: number;
-        itemsPerPage: number;
-        totalPages: number;
-        currentPage: number;
-    };
+    meta: PaginationMeta;
 }
 
 export interface ProductFilters {
@@ -95,6 +96,7 @@ export interface Order {
     phoneNumber: string;
     address: string;
     items: OrderItem[];
+    user?: User;
     createdAt: string;
 }
 

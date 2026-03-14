@@ -16,7 +16,7 @@ interface CartClientProps {
 }
 
 const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
-  const { cart: contextCart, refreshCart, loading: cartLoading } = useCartStore();
+  const { cart: contextCart, loading: cartLoading, updateQuantity: storeUpdateQuantity, removeItem: storeRemoveItem } = useCartStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -54,9 +54,8 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
     if (newQuantity < 1) return;
     try {
       setLoading(true);
-      await apiService.updateCartItem(productId, newQuantity);
-      await refreshCart();
-    } catch (error) {
+      await storeUpdateQuantity(productId, newQuantity);
+    } catch (error: any) {
       console.error('Error updating quantity:', error);
     } finally {
       setLoading(false);
@@ -72,12 +71,10 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
     if (!itemToRemove) return;
     try {
       setIsRemoving(true);
-      await apiService.removeFromCart(itemToRemove);
-      await refreshCart();
+      await storeRemoveItem(itemToRemove);
       toast.success('Deleted product from cart');
-    } catch (error) {
-      console.error('Error removing item:', error);
-      toast.error('Failed to delete product');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete product');
     } finally {
       setIsRemoving(false);
       setIsConfirmOpen(false);
@@ -85,9 +82,7 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
     }
   };
 
-  const calculateSubtotal = () => {
-    return cart?.items?.reduce((acc, item) => acc + Number(item.product.price) * item.quantity, 0) || 0;
-  };
+  const subtotal = useCartStore(state => state.totalAmount);
 
   if (!cart || !cart.items || cart.items.length === 0) {
     return (
@@ -104,7 +99,7 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
     );
   }
 
-  const subtotal = calculateSubtotal();
+  // subtotal is now coming from store via the line above
   const shipping = subtotal >= configs.threshold ? 0 : configs.fee;
   const total = subtotal + shipping;
 
@@ -126,6 +121,7 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">{item.product.name}</h3>
                   <p className="text-sm text-slate-500">ID: {item.productId.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-sm text-slate-500">Price: {formatCurrency(Number(item.product.price))}</p>
                 </div>
                 <p className="text-lg font-bold text-primary-600">{formatCurrency(Number(item.product.price) * item.quantity)}</p>
               </div>

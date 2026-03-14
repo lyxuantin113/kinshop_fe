@@ -37,7 +37,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   let productsResponse: PaginatedResponse<Product> = { 
     data: [], 
-    meta: { totalItems: 0, currentPage: 1, itemsPerPage: 12, totalPages: 0, itemCount: 0 } 
+    meta: { total: 0, page: 1, limit: 12, totalPages: 0 } 
   };
   let allCategories: Category[] = [];
 
@@ -56,9 +56,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const products = Array.isArray(productsResponse) ? productsResponse : (productsResponse?.data || []);
   const meta = Array.isArray(productsResponse) 
     ? { total: products.length, page: 1, limit: 12, totalPages: 1 }
-    : (productsResponse?.meta || { totalItems: 0, currentPage: 1, itemsPerPage: 12, totalPages: 0 });
+    : (productsResponse?.meta || { total: 0, page: 1, limit: 12, totalPages: 0 });
 
-  const totalItems = 'totalItems' in meta ? meta.totalItems : (meta as any).total;
+  const total = meta.total;
 
   const currentCategory = allCategories.find(c => c.id === categoryId);
 
@@ -89,7 +89,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             
             <div className="flex items-center space-x-4">
               <span className="text-sm font-medium text-slate-500">
-                {totalItems} products found
+                {total} products found
               </span>
               {/* Note: In a real app, SortDropdown would update URL params */}
               {/* For simplicity here, I'll just render it. Client-side sorting logic can be added if needed */}

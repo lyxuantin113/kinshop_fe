@@ -23,7 +23,7 @@ export default function LoginPage() {
       await login({ email, password });
     } catch (err: any) {
       console.error('Login failed:', err);
-      setError(err.response?.data?.message || 'Invalid email or password. Please try again.');
+      setError(err.message || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }

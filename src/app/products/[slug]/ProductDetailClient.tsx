@@ -8,13 +8,14 @@ import { Star, Truck, ShieldCheck, ShoppingCart, Loader2, Check, Minus, Plus } f
 import { useAuth } from '@/context/AuthContext';
 import { useCartStore } from '@/store/useCartStore';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface ProductDetailClientProps {
   product: Product;
 }
 
 const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) => {
-  const { refreshCart } = useCartStore();
+  const { addToCart } = useCartStore();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -33,12 +34,11 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product }) =>
 
     try {
       setAdding(true);
-      await apiService.addToCart(product.id, quantity);
-      await refreshCart();
+      await addToCart(product.id, quantity);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      toast.error('Failed to add product to cart, please try again.');
     } finally {
       setAdding(false);
     }

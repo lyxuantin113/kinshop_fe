@@ -15,7 +15,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { refreshCart } = useCartStore();
+  const { addToCart } = useCartStore();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
@@ -35,8 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     
     try {
       setAdding(true);
-      await apiService.addToCart(product.id, 1);
-      await refreshCart();
+      await addToCart(product.id, 1);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     } catch (error) {

@@ -15,28 +15,25 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+
   // Confirm Modal state for cancellation
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
   const { data: response, isLoading: loading, refetch } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: () => apiService.getAllOrders(),
+    queryKey: ['admin-orders', page, deferredSearchQuery],
+    queryFn: () => apiService.getAllOrders({ page, limit, status: deferredSearchQuery || undefined }),
   });
 
   const orders = response?.orders || [];
+  const total = response?.total || 0;
+  const totalPages = response?.totalPages || 1;
 
-  const filteredOrders = useMemo(() => {
-    if (!deferredSearchQuery) return orders;
-    const lowerSearch = deferredSearchQuery.toLowerCase();
-    return orders.filter((o: any) => 
-      o.id.toLowerCase().includes(lowerSearch) ||
-      ((o as any).user?.fullName || '').toLowerCase().includes(lowerSearch) ||
-      ((o as any).user?.email || '').toLowerCase().includes(lowerSearch) ||
-      o.status.toLowerCase().includes(lowerSearch)
-    );
-  }, [orders, deferredSearchQuery]);
+  const filteredOrders = orders; // Now filtered on BE if search is implemented, otherwise client-side filtering below is redundant but harmless if orders is already small
 
   const STATUS_SEQUENCE = [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED];
 
@@ -152,7 +149,7 @@ export default function AdminOrdersPage() {
               <Link 
                 href={`/admin/orders/${o.id}`}
                 className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                title="Xem chi tiết"
+                title="View details"
               >
                 <Eye className="h-4 w-4" />
               </Link>
@@ -169,8 +166,12 @@ export default function AdminOrdersPage() {
         data={filteredOrders}
         columns={columns}
         loading={loading}
+        page={page}
+        total={total}
+        totalPages={totalPages}
+        onPageChange={setPage}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
       />
       <ConfirmModal
         isOpen={isConfirmOpen}

@@ -32,8 +32,7 @@ export default function RegisterPage() {
       await register(formData);
       setSuccess(true);
     } catch (err: any) {
-      console.error('Registration failed:', err);
-      setError(err.response?.data?.message || 'Something went wrong. Please check your information.');
+      setError(err.message || 'Something went wrong. Please check your information.');
     } finally {
       setLoading(false);
     }

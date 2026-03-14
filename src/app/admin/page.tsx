@@ -33,7 +33,7 @@ const AdminDashboard = () => {
         
         setStats(statsData);
         // ordersData should have { orders: Order[], total: number } based on repository
-      setRecentOrders(ordersData.orders.slice(0, 5));
+        setRecentOrders(ordersData.orders.slice(0, 5));
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -45,10 +45,10 @@ const AdminDashboard = () => {
 }, []);
 
 const statsConfigs = [
-  { name: 'Tổng doanh thu', value: formatCurrency(stats?.revenue || 0), icon: DollarSign },
-  { name: 'Người dùng', value: stats?.users || 0, icon: Users },
-  { name: 'Tổng đơn hàng', value: stats?.orders || 0, icon: ShoppingCart },
-  { name: 'Sản phẩm', value: stats?.products || 0, icon: Package },
+  { name: 'Total Revenue', value: formatCurrency(stats?.revenue || 0), icon: DollarSign },
+  { name: 'Users', value: stats?.users || 0, icon: Users },
+  { name: 'Total Orders', value: stats?.orders || 0, icon: ShoppingCart },
+  { name: 'Products', value: stats?.products || 0, icon: Package },
 ];
 
 if (loading) {
@@ -109,7 +109,7 @@ return (
                 {recentOrders.map((order) => (
                   <tr key={order.id} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-primary-600">
-                      <Link href={`/orders/${order.id}`}>
+                      <Link href={`/admin/orders/${order.id}`}>
                         #{order.id.slice(0, 8).toUpperCase()}
                       </Link>
                     </td>
