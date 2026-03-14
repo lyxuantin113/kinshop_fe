@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Tag, Percent, DollarSign, Type } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface DiscountModalProps {
   isOpen: boolean;
@@ -68,14 +69,15 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
       const { apiService } = await import('@/services/api');
       if (discount) {
         await apiService.updateDiscount(discount.id, finalPayload);
+        toast.success(`Updated discount ${finalPayload.code}`);
       } else {
         await apiService.createDiscount(finalPayload);
+        toast.success(`Added discount ${finalPayload.code}`);
       }
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error('Failed to save discount:', error);
-      alert('Không thể lưu mã giảm giá');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save discount');
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
       <div className="w-full max-w-2xl overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-8 py-6">
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            {discount ? 'Chỉnh sửa mã giảm giá' : 'Thêm mã giảm giá mới'}
+            {discount ? 'Edit discount' : 'Add new discount'}
           </h2>
           <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-white hover:text-slate-600 transition-all">
             <X className="h-5 w-5" />
@@ -99,7 +101,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Code */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Mã giảm giá</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Discount code</label>
               <div className="relative">
                 <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -115,7 +117,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
 
             {/* Type */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Loại giảm giá</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Discount type</label>
               <div className="flex gap-2">
                  <button
                     type="button"
@@ -126,7 +128,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
                         : 'border-slate-100 bg-slate-50 text-slate-400 hover:bg-white'
                     }`}
                  >
-                    Phần trăm (%)
+                    Percentage (%)
                  </button>
                  <button
                     type="button"
@@ -137,14 +139,14 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
                         : 'border-slate-100 bg-slate-50 text-slate-400 hover:bg-white'
                     }`}
                  >
-                    Số tiền cố định
+                    Fixed amount
                  </button>
               </div>
             </div>
 
             {/* Value */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Giá trị giảm</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Discount value</label>
               <div className="relative">
                 {formData.type === 'PERCENTAGE' ? (
                   <Percent className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -163,7 +165,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
 
             {/* Min Order */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Đơn tối thiểu</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Minimum order</label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -178,7 +180,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
 
             {/* Start Date */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Ngày bắt đầu</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Start date</label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -193,7 +195,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
 
             {/* End Date */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Ngày kết thúc</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">End date</label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -208,14 +210,14 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
 
             {/* Usage Limit */}
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Lượt dùng tối đa</label>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400">Maximum usage</label>
               <div className="relative">
                 <Type className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="number"
                   value={formData.usageLimit}
                   onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
-                  placeholder="Bỏ trống nếu không giới hạn"
+                  placeholder="Leave empty if unlimited"
                   className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-3.5 pl-11 pr-4 text-sm font-bold outline-none focus:border-primary-500 focus:bg-white transition-all"
                 />
               </div>
@@ -231,7 +233,7 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                         className="h-5 w-5 rounded-lg text-primary-600 focus:ring-primary-500 border-slate-200"
                     />
-                    <label htmlFor="isActive" className="text-sm font-bold text-slate-700">Đang kích hoạt</label>
+                    <label htmlFor="isActive" className="text-sm font-bold text-slate-700">Active</label>
                 </div>
             </div>
           </div>
@@ -242,14 +244,14 @@ export default function DiscountModal({ isOpen, onClose, onSuccess, discount }: 
               onClick={onClose}
               className="flex-1 rounded-2xl border border-slate-100 bg-white py-4 text-sm font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-slate-50"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-[2] rounded-2xl bg-slate-900 py-4 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-slate-200 transition-all hover:bg-primary-600 hover:shadow-primary-500/20 disabled:opacity-50"
             >
-              {loading ? 'Đang lưu...' : 'Lưu mã giảm giá'}
+              {loading ? 'Saving...' : 'Save discount'}
             </button>
           </div>
         </form>

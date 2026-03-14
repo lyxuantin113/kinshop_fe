@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { Category } from '@/types/api';
 import { apiService } from '@/services/api';
+import { toast } from 'react-hot-toast';
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -47,14 +48,18 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
       
       if (category) {
         await apiService.updateCategory(category.id, formData);
+        toast.success(`Updated category ${formData.name}`);
       } else {
         await apiService.createCategory(formData);
+        toast.success(`Added new category ${formData.name}`);
       }
       
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+      const errorMsg = err.message || 'An error occurred, please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -65,8 +70,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
       <div className="w-full max-w-md rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{category ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}</h2>
-            <p className="text-slate-500 text-sm">Quản lý phân loại sản phẩm của bạn.</p>
+            <h2 className="text-2xl font-bold text-slate-900">{category ? 'Edit category' : 'Add new category'}</h2>
+            <p className="text-slate-500 text-sm">Manage your product categories.</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
             <X className="h-6 w-6" />
@@ -81,7 +86,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Tên danh mục</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Category name</label>
             <input
               required
               type="text"
@@ -92,7 +97,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
                 setFormData({ ...formData, name, slug });
               }}
               className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 outline-none focus:border-primary-500 focus:bg-white transition-all font-bold"
-              placeholder="Ví dụ: Điện thoại, Laptop..."
+              placeholder="Example: Phones, Laptops..."
             />
           </div>
 
@@ -108,13 +113,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Mô tả</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Description</label>
             <textarea
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 outline-none focus:border-primary-500 focus:bg-white transition-all"
-              placeholder="Mô tả về danh mục này..."
+              placeholder="Description of this category..."
             />
           </div>
 
@@ -124,14 +129,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, onSucces
               onClick={onClose}
               className="flex-1 btn-secondary py-4 rounded-2xl font-bold"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-[2] btn-primary py-4 rounded-2xl font-bold shadow-lg shadow-primary-500/30 flex items-center justify-center"
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : category ? 'Cập nhật' : 'Thêm danh mục'}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : category ? 'Update' : 'Add category'}
             </button>
           </div>
         </form>

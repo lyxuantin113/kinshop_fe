@@ -124,3 +124,46 @@ export interface SystemConfigResponse {
     status: string;
     data: SystemConfig[];
 }
+
+export enum DiscountType {
+    PERCENTAGE = 'PERCENTAGE',
+    FIXED_AMOUNT = 'FIXED_AMOUNT'
+}
+
+export enum DiscountScope {
+    GLOBAL = 'GLOBAL',
+    CATEGORY = 'CATEGORY',
+    PRODUCT = 'PRODUCT'
+}
+
+export interface Discount {
+    id: string;
+    code: string;
+    description?: string;
+    type: DiscountType;
+    value: number;
+    startDate: string;
+    endDate: string;
+    usageLimit?: number;
+    usedCount: number;
+    minOrderAmount: number;
+    isActive: boolean;
+    scope: DiscountScope;
+    categoryId?: string;
+    productId?: string;
+}
+
+export interface ValidateDiscountResponse {
+    discountId: string;
+    code: string;
+    amount: number;
+    type: DiscountType;
+    value: number;
+}
+
+export interface PreviewCheckoutResponse {
+    subtotal: number;
+    shippingFee: number;
+    discountAmount: number;
+    totalAmount: number;
+}

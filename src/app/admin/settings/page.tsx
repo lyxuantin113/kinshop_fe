@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, RefreshCw, Truck, CreditCard, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { SystemConfig } from '@/types/api';
+import { toast } from 'react-hot-toast';
 
 interface ConfigCardProps {
   configKey: string;
@@ -85,8 +86,6 @@ export default function AdminSettingsPage() {
   const [configs, setConfigs] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const fetchConfigs = async () => {
     try {
@@ -94,7 +93,7 @@ export default function AdminSettingsPage() {
       const response = await apiService.getAllConfigs();
       setConfigs(response);
     } catch (err: any) {
-      setError('Failed to load system configurations.');
+      toast.error('Failed to load system configurations.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -108,14 +107,12 @@ export default function AdminSettingsPage() {
   const handleUpdate = async (key: string, value: string, description?: string) => {
     try {
       setSaving(key);
-      setError('');
-      setSuccess('');
       await apiService.updateConfig(key, value, description);
-      setSuccess(`Configuration "${key}" updated successfully!`);
+      toast.success(`Configuration "${key}" updated successfully!`);
       // Update local state
       setConfigs(prev => prev.map(c => c.key === key ? { ...c, value, description } : c));
     } catch (err: any) {
-      setError(`Failed to update ${key}.`);
+      toast.error(err.message || `Failed to update ${key}.`);
       console.error(err);
     } finally {
       setSaving(null);
@@ -146,20 +143,6 @@ export default function AdminSettingsPage() {
           Reload All
         </button>
       </div>
-
-      {/* Notifications */}
-      {error && (
-        <div className="flex items-center space-x-3 rounded-[1.5rem] bg-red-50 p-4 text-sm font-bold text-red-600 border border-red-100 shadow-sm animate-in fade-in zoom-in">
-          <AlertCircle className="h-5 w-5" />
-          <span>{error}</span>
-        </div>
-      )}
-      {success && (
-        <div className="flex items-center space-x-3 rounded-[1.5rem] bg-emerald-50 p-4 text-sm font-bold text-emerald-600 border border-emerald-100 shadow-sm animate-in fade-in zoom-in">
-          <CheckCircle2 className="h-5 w-5" />
-          <span>{success}</span>
-        </div>
-      )}
 
       {/* Config Grid */}
       <div className="grid gap-8 lg:grid-cols-2">

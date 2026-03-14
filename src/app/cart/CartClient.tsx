@@ -8,6 +8,8 @@ import { apiService } from '@/services/api';
 import { useCartStore } from '@/store/useCartStore';
 import { formatCurrency } from '@/utils/format';
 import { useRouter } from 'next/navigation';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import { toast } from 'react-hot-toast';
 
 interface CartClientProps {
   initialCart: Cart | null;
@@ -18,6 +20,11 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // Confirm Modal state for removing items
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+
   const cart = contextCart || initialCart;
   const [configs, setConfigs] = useState<{ fee: number; threshold: number }>({ fee: 50000, threshold: 1000000 });
 
@@ -26,7 +33,7 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
       try {
         const res = await apiService.getAllConfigs();
         // The interceptor already unwrapped { status, data }, so res is the array
-        const configArray = Array.isArray(res) ? res : (res?.data || []);
+        const configArray = Array.isArray(res) ? res : (res as any)?.data || [];
         
         const baseFee = configArray.find((c: any) => c.key === 'SHIPPING_BASE_FEE')?.value;
         const freeThreshold = configArray.find((c: any) => c.key === 'SHIPPING_FREE_THRESHOLD')?.value;
@@ -56,15 +63,25 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
     }
   };
 
-  const removeItem = async (productId: string) => {
+  const confirmRemoveItem = (productId: string) => {
+    setItemToRemove(productId);
+    setIsConfirmOpen(true);
+  };
+
+  const removeItem = async () => {
+    if (!itemToRemove) return;
     try {
-      setLoading(true);
-      await apiService.removeFromCart(productId);
+      setIsRemoving(true);
+      await apiService.removeFromCart(itemToRemove);
       await refreshCart();
+      toast.success('Deleted product from cart');
     } catch (error) {
       console.error('Error removing item:', error);
+      toast.error('Failed to delete product');
     } finally {
-      setLoading(false);
+      setIsRemoving(false);
+      setIsConfirmOpen(false);
+      setItemToRemove(null);
     }
   };
 
@@ -133,8 +150,8 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
                   </button>
                 </div>
                 <button
-                  onClick={() => removeItem(item.productId)}
-                  disabled={loading}
+                  onClick={() => confirmRemoveItem(item.productId)}
+                  disabled={loading || isRemoving}
                   className="flex items-center space-x-2 text-sm font-bold text-red-500 hover:text-red-600 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -182,6 +199,16 @@ const CartClient: React.FC<CartClientProps> = ({ initialCart }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={removeItem}
+        title="Remove from cart"
+        message="Are you sure you want to remove this product from the cart?"
+        confirmText="Remove product"
+        isLoading={isRemoving}
+      />
     </div>
   );
 };

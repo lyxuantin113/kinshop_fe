@@ -63,8 +63,8 @@ return (
   <div className="space-y-8 animate-in fade-in duration-500">
     {/* Header */}
     <div>
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">Tổng quan hệ thống</h1>
-      <p className="text-slate-500 mt-1 font-medium italic">Chào mừng trở lại! Dưới đây là những gì đang diễn ra hôm nay.</p>
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-display">System Overview</h1>
+      <p className="text-slate-500 mt-1 font-medium italic">Welcome back! Here's what's happening today.</p>
     </div>
 
     {/* Stats Grid */}
@@ -91,8 +91,8 @@ return (
       {/* Recent Orders */}
       <div className="lg:col-span-2 space-y-4">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">Đơn hàng mới nhất</h2>
-          <Link href="/admin/orders" className="text-sm font-bold text-primary-600 hover:text-primary-700">Xem tất cả</Link>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Recent Orders</h2>
+          <Link href="/admin/orders" className="text-sm font-bold text-primary-600 hover:text-primary-700">View all</Link>
         </div>
         <div className="overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/30">
           <div className="overflow-x-auto">
@@ -139,7 +139,7 @@ return (
 
         {/* Activity Feed */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 px-2">Hoạt động hệ thống</h2>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 px-2">System Activity</h2>
           <div className="rounded-[2.5rem] border border-slate-100 bg-white p-6 shadow-xl shadow-slate-200/30 space-y-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex space-x-4">
@@ -147,9 +147,9 @@ return (
                   <Clock className="h-5 w-5 text-slate-400" />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-semibold text-slate-900">Tính năng đang phát triển</p>
-                  <p className="text-xs text-slate-500">Lịch sử hoạt động sẽ sớm được cập nhật tại đây.</p>
-                  <p className="text-[10px] font-bold text-slate-400">Vừa xong</p>
+                  <p className="text-sm font-semibold text-slate-900">Feature is developing</p>
+                  <p className="text-xs text-slate-500">Activity history will be updated here soon.</p>
+                  <p className="text-[10px] font-bold text-slate-400">Just now</p>
                 </div>
               </div>
             ))}

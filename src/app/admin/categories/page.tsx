@@ -1,42 +1,37 @@
 "use client";
 
-import React, { useState, useEffect, useDeferredValue } from 'react';
+import React, { useState, useDeferredValue } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { Category } from '@/types/api';
 import CategoryModal from '@/components/admin/CategoryModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import { toast } from 'react-hot-toast';
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  
+  // Confirm Modal state
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   // Pagination state
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
 
-  const fetchData = async (currentPage: number = 1, search: string = '') => {
-    try {
-      setLoading(true);
-      const response = await apiService.getCategories({ page: currentPage, limit: 20, search });
-      // Correctly extract data from paginated response
-      setCategories(response.data);
-      setTotalPages(response.meta.totalPages);
-      setTotalItems(response.meta.totalItems);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: response, isLoading: loading, refetch } = useQuery({
+    queryKey: ['admin-categories', page, deferredSearchQuery],
+    queryFn: () => apiService.getCategories({ page, limit: 12, search: deferredSearchQuery }),
+  });
 
-  useEffect(() => {
-    fetchData(page, deferredSearchQuery);
-  }, [page, deferredSearchQuery]);
+  const categories = Array.isArray(response) ? response : (response as any)?.data || [];
+  const totalPages = (response as any)?.meta?.totalPages || 1;
+  const totalItems = (response as any)?.meta?.totalItems || 0;
 
   const columns = [
     {
@@ -65,27 +60,38 @@ export default function AdminCategoriesPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (c: Category) => {
-    if (confirm(`Bạn có chắc muốn xóa danh mục ${c.name}?`)) {
-      try {
-        await apiService.deleteCategory(c.id);
-        fetchData(page, deferredSearchQuery);
-      } catch (error) {
-        alert('Xóa danh mục thất bại');
-      }
+  const confirmDelete = (c: Category) => {
+    setCategoryToDelete(c);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!categoryToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await apiService.deleteCategory(categoryToDelete.id);
+      toast.success(`Deleted category ${categoryToDelete.name}`);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || 'Delete category failed');
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmOpen(false);
+      setCategoryToDelete(null);
     }
   };
 
   return (
     <>
       <DataTable
-        title="Danh mục sản phẩm"
+        title="Categories"
         data={categories}
         columns={columns}
         loading={loading}
         onAdd={handleAdd}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={confirmDelete}
         currentPage={page}
         totalPages={totalPages}
         totalItems={totalItems}
@@ -93,11 +99,20 @@ export default function AdminCategoriesPage() {
         searchQuery={searchQuery}
         onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
       />
-      <CategoryModal
+      <CategoryModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => fetchData(page, deferredSearchQuery)}
+        onSuccess={refetch}
         category={selectedCategory}
+      />
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Category"
+        message={<span>Are you sure you want to delete category <strong className="text-slate-900">{categoryToDelete?.name}</strong>? This action cannot be undone.</span>}
+        confirmText="Delete Category"
+        isLoading={isDeleting}
       />
     </>
   );

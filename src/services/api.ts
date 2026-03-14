@@ -1,5 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { Product, Category, PaginatedResponse, ProductFilters, Cart, Order, AuthResponse, RefreshResponse, User, SystemConfig, SystemConfigResponse } from '@/types/api';
+import { Product, Category, PaginatedResponse, ProductFilters, Cart, Order, AuthResponse, RefreshResponse, User, SystemConfig, SystemConfigResponse, ValidateDiscountResponse, Discount } from '@/types/api';
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
@@ -22,15 +22,15 @@ export const apiService = {
     },
 
     // Auth
-    register: async (data: any) => {
-        const response = await apiClient.post<any>('users/register', data);
-        return response.data;
+    register: async (data: any): Promise<User> => {
+        const response = await apiClient.post<{ status: string, data: User }>('users/register', data);
+        return response.data as unknown as User;
     },
 
-    login: async (data: any) => {
-        const response = await apiClient.post<any>('users/login', data);
-        accessToken = response.data.accessToken;
-        return response.data;
+    login: async (data: any): Promise<AuthResponse['data']> => {
+        const response = await apiClient.post<AuthResponse>('users/login', data);
+        accessToken = (response.data as unknown as AuthResponse['data']).accessToken;
+        return response.data as unknown as AuthResponse['data'];
     },
 
     logout: async () => {
@@ -61,12 +61,12 @@ export const apiService = {
     getAccessToken: () => accessToken,
 
     // Products
-    getProducts: async (filters: ProductFilters = {}) => {
+    getProducts: async (filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> => {
         try {
-            const response = await apiClient.get<any>('products', {
+            const response = await apiClient.get<PaginatedResponse<Product>>('products', {
                 params: filters,
             });
-            return response.data;
+            return response.data as unknown as PaginatedResponse<Product>;
         } catch (error: any) {
             console.error('[ApiService] getProducts error:', {
                 url: error.config?.url,
@@ -77,159 +77,164 @@ export const apiService = {
         }
     },
 
-    getProductBySlug: async (idOrSlug: string) => {
-        const response = await apiClient.get<any>(`products/${idOrSlug}`);
-        return response.data;
+    getProductBySlug: async (idOrSlug: string): Promise<Product> => {
+        const response = await apiClient.get<Product>(`products/${idOrSlug}`);
+        return response.data as unknown as Product;
     },
 
     // Categories
-    getCategories: async (params: { page?: number; limit?: number; search?: string } = {}) => {
-        const response = await apiClient.get<any>('categories', { params });
-        return response.data;
+    getCategories: async (params: { page?: number; limit?: number; search?: string } = {}): Promise<Category[] | PaginatedResponse<Category>> => {
+        const response = await apiClient.get<Category[] | PaginatedResponse<Category>>('categories', { params });
+        return response.data as unknown as Category[] | PaginatedResponse<Category>;
     },
 
     // Cart
-    getCart: async () => {
-        const response = await apiClient.get<any>('cart');
-        return response.data;
+    getCart: async (): Promise<Cart> => {
+        const response = await apiClient.get<Cart>('cart');
+        return response.data as unknown as Cart;
     },
 
-    addToCart: async (productId: string, quantity: number) => {
-        const response = await apiClient.post<any>('cart/add', { productId, quantity });
-        return response.data;
+    addToCart: async (productId: string, quantity: number): Promise<Cart> => {
+        const response = await apiClient.post<Cart>('cart/add', { productId, quantity });
+        return response.data as unknown as Cart;
     },
 
-    updateCartItem: async (productId: string, quantity: number) => {
-        const response = await apiClient.patch<any>(`cart/update/${productId}`, { quantity });
-        return response.data;
+    updateCartItem: async (productId: string, quantity: number): Promise<Cart> => {
+        const response = await apiClient.patch<Cart>(`cart/update/${productId}`, { quantity });
+        return response.data as unknown as Cart;
     },
 
-    removeFromCart: async (productId: string) => {
-        const response = await apiClient.delete<any>(`cart/remove/${productId}`);
-        return response.data;
+    removeFromCart: async (productId: string): Promise<Cart> => {
+        const response = await apiClient.delete<Cart>(`cart/remove/${productId}`);
+        return response.data as unknown as Cart;
     },
 
-    clearCart: async () => {
-        const response = await apiClient.delete<any>('cart/clear');
-        return response.data;
+    clearCart: async (): Promise<void> => {
+        const response = await apiClient.delete<{ message: string }>('cart/clear');
+        return response.data as unknown as void;
     },
 
     // Orders
-    checkout: async (data: { phoneNumber: string; address: string; couponCode?: string }) => {
+    checkout: async (data: { phoneNumber: string; address: string; couponCode?: string }): Promise<Order> => {
         const response = await apiClient.post<any>('orders/checkout', data);
         return response.data;
     },
 
-    getAllOrders: async () => {
+    previewCheckout: async (couponCode?: string): Promise<import('@/types/api').PreviewCheckoutResponse> => {
+        const response = await apiClient.post<any>('orders/preview-checkout', { couponCode });
+        return response.data;
+    },
+
+    getAllOrders: async (): Promise<{ status: string, orders: Order[], total: number }> => {
         const response = await apiClient.get<any>('orders/admin/all');
         return response.data;
     },
 
-    getMyOrders: async () => {
+    getMyOrders: async (): Promise<Order[]> => {
         const response = await apiClient.get<any>('orders/my-orders');
         return response.data;
     },
 
-    getOrderDetails: async (orderId: string) => {
+    getOrderDetails: async (orderId: string): Promise<Order> => {
         const response = await apiClient.get<any>(`orders/${orderId}`);
         return response.data;
     },
 
-    async updateOrderStatus(orderId: string, status: string): Promise<Order> {
-        const response = await apiClient.patch(`/orders/admin/${orderId}/status`, { status });
+    updateOrderStatus: async (orderId: string, status: string): Promise<Order> => {
+        const response = await apiClient.patch<any>(`/orders/admin/${orderId}/status`, { status });
         return response.data;
     },
 
-    async getAdminOrder(orderId: string): Promise<Order> {
-        const response = await apiClient.get(`/orders/admin/${orderId}`);
+    getAdminOrder: async (orderId: string): Promise<Order> => {
+        const response = await apiClient.get<any>(`/orders/admin/${orderId}`);
         return response.data;
     },
 
     // Admin - Products
-    createProduct: async (data: any) => {
-        const response = await apiClient.post<any>('products', data);
-        return response.data;
+    createProduct: async (data: any): Promise<Product> => {
+        const response = await apiClient.post<Product>('products', data);
+        return response.data as unknown as Product;
     },
 
-    uploadProductImages: async (formData: FormData) => {
-        const response = await apiClient.post<any>('products/upload-images', formData, {
+    uploadProductImages: async (formData: FormData): Promise<{ urls: string[] }> => {
+        const response = await apiClient.post<{ urls: string[] }>('products/upload-images', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
-        return response.data;
+        return response.data as unknown as { urls: string[] };
     },
 
-    updateProduct: async (id: string, data: any) => {
-        const response = await apiClient.patch<any>(`products/${id}`, data);
-        return response.data;
+    updateProduct: async (id: string, data: any): Promise<Product> => {
+        const response = await apiClient.patch<Product>(`products/${id}`, data);
+        return response.data as unknown as Product;
     },
 
-    deleteProduct: async (id: string) => {
-        const response = await apiClient.delete<any>(`products/${id}`);
-        return response.data;
+    deleteProduct: async (id: string): Promise<void> => {
+        const response = await apiClient.delete<void>(`products/${id}`);
+        return response.data as unknown as void;
     },
 
     // Admin - Categories
-    createCategory: async (data: any) => {
-        const response = await apiClient.post<any>('categories', data);
-        return response.data;
+    createCategory: async (data: any): Promise<Category> => {
+        const response = await apiClient.post<Category>('categories', data);
+        return response.data as unknown as Category;
     },
 
-    updateCategory: async (id: string, data: any) => {
-        const response = await apiClient.put<any>(`categories/${id}`, data);
-        return response.data;
+    updateCategory: async (id: string, data: any): Promise<Category> => {
+        const response = await apiClient.put<Category>(`categories/${id}`, data);
+        return response.data as unknown as Category;
     },
 
-    deleteCategory: async (id: string) => {
-        const response = await apiClient.delete<any>(`categories/${id}`);
-        return response.data;
+    deleteCategory: async (id: string): Promise<void> => {
+        const response = await apiClient.delete<void>(`categories/${id}`);
+        return response.data as unknown as void;
     },
 
     // Admin - Users
-    getAllUsers: async (params: { page?: number; limit?: number; search?: string } = {}) => {
-        const response = await apiClient.get<any>('users', { params });
-        return response.data;
+    getAllUsers: async (params: { page?: number; limit?: number; search?: string } = {}): Promise<PaginatedResponse<User>> => {
+        const response = await apiClient.get<PaginatedResponse<User>>('users', { params });
+        return response.data as unknown as PaginatedResponse<User>;
     },
 
-    deleteUser: async (id: string) => {
-        const response = await apiClient.delete<any>(`users/${id}`);
-        return response.data;
+    deleteUser: async (id: string): Promise<void> => {
+        const response = await apiClient.delete<void>(`users/${id}`);
+        return response.data as unknown as void;
     },
 
     // Admin - Discounts
-    getDiscounts: async () => {
-        const response = await apiClient.get<any>('discounts');
-        return response.data;
+    getDiscounts: async (): Promise<Discount[]> => {
+        const response = await apiClient.get<Discount[]>('discounts');
+        return response.data as unknown as Discount[];
     },
 
-    createDiscount: async (data: any) => {
-        const response = await apiClient.post<any>('discounts', data);
-        return response.data;
+    createDiscount: async (data: any): Promise<Discount> => {
+        const response = await apiClient.post<Discount>('discounts', data);
+        return response.data as unknown as Discount;
     },
 
-    updateDiscount: async (id: string, data: any) => {
-        const response = await apiClient.patch<any>(`discounts/${id}`, data);
-        return response.data;
+    updateDiscount: async (id: string, data: any): Promise<Discount> => {
+        const response = await apiClient.patch<Discount>(`discounts/${id}`, data);
+        return response.data as unknown as Discount;
     },
-    deleteDiscount: async (id: string) => {
-        const response = await apiClient.delete<any>(`discounts/${id}`);
-        return response.data;
+    deleteDiscount: async (id: string): Promise<void> => {
+        const response = await apiClient.delete<void>(`discounts/${id}`);
+        return response.data as unknown as void;
     },
 
     // Admin - Stats
-    getAdminStats: async () => {
-        const response = await apiClient.get<any>('orders/admin/stats');
-        return response.data;
+    getAdminStats: async (): Promise<{ revenue: number, orders: number, users: number, products: number }> => {
+        const response = await apiClient.get<{ revenue: number, orders: number, users: number, products: number }>('orders/admin/stats');
+        return response.data as unknown as { revenue: number, orders: number, users: number, products: number };
     },
 
     // Admin - System Config
-    getAllConfigs: async () => {
-        const response = await apiClient.get<any>('system-configs');
-        return response.data;
+    getAllConfigs: async (): Promise<SystemConfig[]> => {
+        const response = await apiClient.get<SystemConfig[]>('system-configs');
+        return response.data as unknown as SystemConfig[];
     },
 
-    updateConfig: async (key: string, value: string, description?: string) => {
-        const response = await apiClient.patch<any>(`system-configs/${key}`, { value, description });
-        return response.data;
+    updateConfig: async (key: string, value: string, description?: string): Promise<SystemConfig> => {
+        const response = await apiClient.patch<SystemConfig>(`system-configs/${key}`, { value, description });
+        return response.data as unknown as SystemConfig;
     },
 
     onUnauthorized: (callback: () => void) => {
@@ -265,6 +270,27 @@ apiClient.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _skipInterceptor?: boolean };
 
+        // Custom Error Message Extraction (NestJS Validation Error Format)
+        let errorMessage = 'An unexpected error occurred';
+        if (error.response?.data) {
+            const { message, errors } = error.response.data as any;
+
+            // 1. Check for Custom Zod Error Format from Backend: { errors: [{ message: '...' }] }
+            if (errors && Array.isArray(errors) && errors.length > 0) {
+                errorMessage = errors[0].message;
+            }
+            // 2. Check for traditional NestJS array: { message: ['...', '...'] }
+            else if (Array.isArray(message)) {
+                errorMessage = message[0];
+            }
+            // 3. Fallback to normal string message or stringified object
+            else if (typeof message === 'string') {
+                errorMessage = message;
+            } else if (typeof message === 'object') {
+                errorMessage = JSON.stringify(message);
+            }
+        }
+
         // Prevent infinite loops or deadlocks on the refresh endpoint itself
         if (originalRequest._skipInterceptor) {
             return Promise.reject(error);
@@ -296,7 +322,7 @@ apiClient.interceptors.response.use(
                 return Promise.reject(err);
             }
         }
-        return Promise.reject(error);
+        return Promise.reject(new Error(errorMessage));
     }
 );
 

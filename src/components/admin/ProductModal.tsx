@@ -68,7 +68,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSuccess,
       // We need a specific endpoint for upload or handle it in create/update
       // Backend has router.post('/upload-images', upload.array('images', 5), productController.uploadImages);
       const data = await apiService.uploadProductImages(formData);
-      setImageUrls(prev => [...prev, ...data]);
+      setImageUrls(prev => [...prev, ...(data.urls || [])]);
     } catch (err: any) {
       setError('Tải ảnh lên thất bại. Vui lòng thử lại.');
     } finally {

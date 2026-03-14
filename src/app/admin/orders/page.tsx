@@ -1,23 +1,36 @@
 "use client";
 
-import React, { useState, useEffect, useDeferredValue, useMemo } from 'react';
+import React, { useState, useDeferredValue, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { Order, OrderStatus } from '@/types/api';
 import { formatCurrency } from '@/utils/format';
 import Link from 'next/link';
 import { Eye, CheckCircle2, Truck, Package, XCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import ConfirmModal from '@/components/admin/ConfirmModal';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  // Confirm Modal state for cancellation
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const { data: response, isLoading: loading, refetch } = useQuery({
+    queryKey: ['admin-orders'],
+    queryFn: () => apiService.getAllOrders(),
+  });
+
+  const orders = response?.orders || [];
 
   const filteredOrders = useMemo(() => {
     if (!deferredSearchQuery) return orders;
     const lowerSearch = deferredSearchQuery.toLowerCase();
-    return orders.filter(o => 
+    return orders.filter((o: any) => 
       o.id.toLowerCase().includes(lowerSearch) ||
       ((o as any).user?.fullName || '').toLowerCase().includes(lowerSearch) ||
       ((o as any).user?.email || '').toLowerCase().includes(lowerSearch) ||
@@ -27,29 +40,28 @@ export default function AdminOrdersPage() {
 
   const STATUS_SEQUENCE = [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED];
 
-  const fetchOrders = async () => {
+  const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {
-      setLoading(true);
-      const response = await apiService.getAllOrders(); 
-      setOrders(response.orders);
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      if (newStatus === OrderStatus.CANCELLED) {
+        setIsCancelling(true);
+      }
+      await apiService.updateOrderStatus(orderId, newStatus);
+      toast.success(`Updated order #${orderId.slice(0,8)} to ${newStatus}`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || 'Update order status failed');
     } finally {
-      setLoading(false);
+      if (newStatus === OrderStatus.CANCELLED) {
+        setIsCancelling(false);
+        setIsConfirmOpen(false);
+        setOrderToCancel(null);
+      }
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
-    try {
-      await apiService.updateOrderStatus(orderId, newStatus);
-      fetchOrders();
-    } catch (error) {
-      alert('Failed to update status');
-    }
+  const confirmCancel = (orderId: string) => {
+    setOrderToCancel(orderId);
+    setIsConfirmOpen(true);
   };
 
   const getNextStatus = (current: OrderStatus) => {
@@ -73,7 +85,7 @@ export default function AdminOrdersPage() {
 
   const columns = [
     {
-      header: 'Mã đơn hàng',
+      header: 'Order ID',
       accessor: (o: Order) => (
         <div className="flex flex-col">
           <span className="font-black text-primary-600">#{o.id.slice(0, 8).toUpperCase()}</span>
@@ -82,7 +94,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-        header: 'Khách hàng',
+        header: 'Customer',
         accessor: (o: Order) => (
           <div className="flex flex-col">
             <span className="font-bold text-slate-900">{(o as any).user?.fullName || 'Guest'}</span>
@@ -91,7 +103,7 @@ export default function AdminOrdersPage() {
         ),
       },
     {
-      header: 'Ngày đặt',
+      header: 'Order date',
       accessor: (o: Order) => (
         <div className="text-slate-500 font-medium">
           {new Date(o.createdAt).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -99,7 +111,7 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      header: 'Trạng thái',
+      header: 'Status',
       accessor: (o: Order) => (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ${getStatusColor(o.status)}`}>
           {o.status}
@@ -107,11 +119,11 @@ export default function AdminOrdersPage() {
       ),
     },
     {
-      header: 'Tổng tiền',
+      header: 'Total amount',
       accessor: (o: Order) => <div className="font-black text-slate-900">{formatCurrency(o.totalAmount)}</div>,
     },
     {
-        header: 'Thao tác',
+        header: 'Actions',
         className: 'text-right',
         accessor: (o: Order) => {
           const nextStatus = getNextStatus(o.status);
@@ -123,20 +135,16 @@ export default function AdminOrdersPage() {
                 <button 
                   onClick={() => handleStatusUpdate(o.id, nextStatus)}
                   className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                  title={`Xác nhận: ${nextStatus}`}
+                  title={`Confirm: ${nextStatus}`}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                 </button>
               )}
               {canCancel && (
                 <button 
-                  onClick={() => {
-                    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-                      handleStatusUpdate(o.id, OrderStatus.CANCELLED);
-                    }
-                  }}
+                  onClick={() => confirmCancel(o.id)}
                   className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                  title="Hủy đơn hàng"
+                  title="Cancel order"
                 >
                   <XCircle className="h-4 w-4" />
                 </button>
@@ -155,13 +163,24 @@ export default function AdminOrdersPage() {
   ];
 
   return (
-    <DataTable
-      title="Quản lý đơn hàng"
-      data={filteredOrders}
-      columns={columns}
-      loading={loading}
-      searchQuery={searchQuery}
-      onSearchChange={setSearchQuery}
-    />
+    <>
+      <DataTable
+        title="Orders Management"
+        data={filteredOrders}
+        columns={columns}
+        loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => orderToCancel && handleStatusUpdate(orderToCancel, OrderStatus.CANCELLED)}
+        title="Cancel Order"
+        message={<span>Are you sure you want to cancel order <strong className="text-slate-900">#{orderToCancel?.slice(0,8).toUpperCase()}</strong>? This action cannot be undone.</span>}
+        confirmText="Cancel Order"
+        isLoading={isCancelling}
+      />
+    </>
   );
 }

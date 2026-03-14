@@ -18,7 +18,8 @@ interface CategoryPageProps {
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
     const categories = await apiService.getCategories();
-    const category = categories.find((c: any) => c.id === params.id);
+    const categoryData = Array.isArray(categories) ? categories : ((categories as any)?.data || []);
+    const category = categoryData.find((c: any) => c.id === params.id);
     return {
       title: `${category?.name || 'Category'} | KinShop`,
       description: category?.description || `Browse our collection of ${category?.name} products.`,

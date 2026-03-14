@@ -6,6 +6,8 @@ import { OrderStatus, Order } from '@/types/api';
 import { apiService } from '@/services/api';
 import Link from 'next/link';
 import { formatCurrency, formatDate } from '@/utils/format';
+import { toast } from 'react-hot-toast';
+import ConfirmModal from '@/components/admin/ConfirmModal';
 
 const StatusBadge = ({ status }: { status: OrderStatus }) => {
   const configs = {
@@ -36,6 +38,36 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const STATUS_SEQUENCE = [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED];
+
+  const getNextStatus = (current: OrderStatus) => {
+    const index = STATUS_SEQUENCE.indexOf(current);
+    if (index !== -1 && index < STATUS_SEQUENCE.length - 1) {
+      return STATUS_SEQUENCE[index + 1];
+    }
+    return null;
+  };
+
+  const handleStatusUpdate = async (newStatus: OrderStatus) => {
+    if (!order) return;
+    try {
+      if (newStatus === OrderStatus.CANCELLED) setIsCancelling(true);
+      await apiService.updateOrderStatus(order.id, newStatus);
+      toast.success(`Updated order #${orderId.slice(0,8)} to ${newStatus}`);
+      setOrder({ ...order, status: newStatus });
+    } catch (err: any) {
+      toast.error(err.message || 'Update order status failed');
+    } finally {
+      if (newStatus === OrderStatus.CANCELLED) {
+        setIsCancelling(false);
+        setIsConfirmOpen(false);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!orderId) return;
 
@@ -46,7 +78,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
         setOrder(response);
       } catch (err: any) {
         console.error('Error fetching order details:', err);
-        setError('Không thể tải chi tiết đơn hàng cho Admin. Vui lòng kiểm tra quyền truy cập.');
+        setError('Failed to fetch order details for Admin. Please check your access permissions.');
       } finally {
         setLoading(false);
       }
@@ -71,7 +103,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
         </div>
         <h2 className="text-2xl font-extrabold text-slate-900">{error || 'Order not found'}</h2>
         <Link href="/admin/orders" className="btn-primary mt-8 px-8 py-3 h-auto text-white font-bold">
-          Quay lại danh sách
+          Back to order list
         </Link>
       </div>
     );
@@ -83,11 +115,34 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/admin/orders" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors">
           <ChevronLeft className="mr-1 h-4 w-4" />
-          Quay lại danh sách đơn hàng
+          Back to order list
         </Link>
-        <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-400">Trạng thái:</span>
-            <StatusBadge status={order.status} />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-400">Status:</span>
+              <StatusBadge status={order.status} />
+          </div>
+          
+          <div className="flex items-center gap-2 sm:pl-4 sm:border-l border-slate-200">
+              {order && getNextStatus(order.status) && (
+                <button 
+                  onClick={() => handleStatusUpdate(getNextStatus(order.status)!)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Confirm: {getNextStatus(order.status)}
+                </button>
+              )}
+              {order && order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.CANCELLED && (
+                <button 
+                  onClick={() => setIsConfirmOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Cancel order
+                </button>
+              )}
+          </div>
         </div>
       </div>
 
@@ -99,7 +154,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
             <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-6">
               <h2 className="flex items-center text-lg font-bold text-slate-900">
                 <User className="mr-3 h-5 w-5 text-primary-600" />
-                Thông tin khách hàng & Giao hàng
+                Customer information & Delivery
               </h2>
             </div>
             <div className="p-8 grid gap-8 sm:grid-cols-2">
@@ -109,7 +164,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
                       <User className="h-5 w-5" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Họ tên khách hàng</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer name</p>
                       <p className="font-bold text-slate-900">{(order as any).user?.fullName || 'N/A'}</p>
                       <p className="text-xs text-slate-500">{(order as any).user?.email || ''}</p>
                     </div>
@@ -119,7 +174,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
                       <Phone className="h-5 w-5" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số điện thoại</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone number</p>
                       <p className="font-bold text-slate-900">{order.phoneNumber || 'N/A'}</p>
                     </div>
                  </div>
@@ -129,7 +184,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
                   <MapPin className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Địa chỉ nhận hàng</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shipping address</p>
                   <p className="font-bold text-slate-900 leading-relaxed">{order.address || 'N/A'}</p>
                 </div>
               </div>
@@ -141,7 +196,7 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
             <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-6">
               <h2 className="flex items-center text-lg font-bold text-slate-900">
                 <Package className="mr-3 h-5 w-5 text-primary-600" />
-                Danh sách sản phẩm
+                List of products
               </h2>
             </div>
             <div className="divide-y divide-slate-100 px-8">
@@ -169,26 +224,26 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
         <div className="space-y-8">
            {/* Order Info Card */}
            <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Chi tiết kỹ thuật</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-6">Order details</h2>
               <div className="space-y-6">
                  <div className="flex items-center space-x-4">
                     <Calendar className="h-5 w-5 text-slate-400" />
                     <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ngày đặt hàng</p>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order date</p>
                        <p className="text-sm font-bold text-slate-900">{formatDate(order.createdAt)}</p>
                     </div>
                  </div>
                  <div className="flex items-center space-x-4">
                     <CreditCard className="h-5 w-5 text-slate-400" />
                     <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phương thức thanh toán</p>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment method</p>
                        <p className="text-sm font-bold text-slate-900">Cash on Delivery (COD)</p>
                     </div>
                  </div>
                  <div className="flex items-center space-x-4">
                     <Package className="h-5 w-5 text-slate-400" />
                     <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Đơn hàng ID</p>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Order ID</p>
                        <p className="text-sm font-bold text-slate-900 truncate max-w-[180px]">#{orderId.toUpperCase()}</p>
                     </div>
                  </div>
@@ -197,32 +252,42 @@ const AdminOrderDetailClient: React.FC<AdminOrderDetailClientProps> = ({ orderId
 
            {/* Summary Card */}
            <section className="rounded-3xl border border-slate-200 bg-slate-900 p-8 text-white shadow-xl shadow-slate-900/20">
-              <h2 className="text-xl font-bold mb-6 text-primary-400">Tổng kết tài chính</h2>
+              <h2 className="text-xl font-bold mb-6 text-primary-400">Financial summary</h2>
               <div className="space-y-4">
                  <div className="flex justify-between text-sm text-slate-400">
-                    <span>Tạm tính</span>
+                    <span>Subtotal</span>
                     <span className="font-bold text-white">{formatCurrency(order.subtotal)}</span>
                  </div>
                  <div className="flex justify-between text-sm text-slate-400">
-                    <span>Phí vận chuyển</span>
+                    <span>Shipping fee</span>
                     <span className="font-bold text-white">
                        {order.shippingFee === 0 ? 'FREE' : formatCurrency(order.shippingFee)}
                     </span>
                  </div>
                  {Number(order.discountAmount) > 0 && (
                     <div className="flex justify-between text-sm text-emerald-400">
-                       <span>Giảm giá</span>
+                       <span>Discount</span>
                        <span className="font-bold">-{formatCurrency(order.discountAmount)}</span>
                     </div>
                  )}
                  <div className="border-t border-slate-800 pt-4 flex justify-between items-center">
-                    <span className="text-lg font-bold">Tổng doanh thu</span>
+                    <span className="text-lg font-bold">Total amount</span>
                     <span className="text-2xl font-black text-primary-400">{formatCurrency(order.totalAmount)}</span>
                  </div>
               </div>
            </section>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => handleStatusUpdate(OrderStatus.CANCELLED)}
+        title="Cancel order"
+        message={<span>Are you sure you want to cancel this order <strong className="text-slate-900">#{orderId.toUpperCase()}</strong>? This action cannot be undone.</span>}
+        confirmText="Cancel order"
+        isLoading={isCancelling}
+      />
     </div>
   );
 };

@@ -7,6 +7,8 @@ import { Product, Category } from '@/types/api';
 import Image from 'next/image';
 import { formatCurrency } from '@/utils/format';
 import ProductModal from '@/components/admin/ProductModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import { toast } from 'react-hot-toast';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -33,7 +35,7 @@ export default function AdminProductsPage() {
       setProducts(productsRes.data);
       setTotalPages(productsRes.meta.totalPages);
       setTotalItems(productsRes.meta.totalItems);
-      setCategories(categoriesRes.data);
+      setCategories(Array.isArray(categoriesRes) ? categoriesRes : (categoriesRes as any).data || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -95,6 +97,11 @@ export default function AdminProductsPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // Confirm Modal state
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAdd = () => {
     setSelectedProduct(null);
@@ -106,14 +113,25 @@ export default function AdminProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (p: Product) => {
-    if (confirm(`Bạn có chắc muốn xóa ${p.name}?`)) {
-        try {
-            await apiService.deleteProduct(p.id);
-            fetchData();
-        } catch (error) {
-            alert('Xóa sản phẩm thất bại');
-        }
+  const confirmDelete = (p: Product) => {
+    setProductToDelete(p);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+        await apiService.deleteProduct(productToDelete.id);
+        toast.success(`Deleted product ${productToDelete.name}`);
+        fetchData(page, deferredSearchQuery);
+    } catch (error: any) {
+        toast.error(error.message || 'Delete product failed');
+    } finally {
+        setIsDeleting(false);
+        setIsConfirmOpen(false);
+        setProductToDelete(null);
     }
   };
 
@@ -122,13 +140,13 @@ export default function AdminProductsPage() {
   return (
     <>
       <DataTable
-        title="Kho sản phẩm"
+        title="Product Inventory"
         data={products}
         columns={columns}
         loading={loading}
         onAdd={handleAdd}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={confirmDelete}
         onPrint={handlePrint}
         currentPage={page}
         totalPages={totalPages}
@@ -140,9 +158,18 @@ export default function AdminProductsPage() {
       <ProductModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(page, deferredSearchQuery)}
         product={selectedProduct}
         categories={categories}
+      />
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Product"
+        message={<span>Are you sure you want to delete product <strong className="text-slate-900">{productToDelete?.name}</strong>? This action cannot be undone.</span>}
+        confirmText="Delete Product"
+        isLoading={isDeleting}
       />
     </>
   );

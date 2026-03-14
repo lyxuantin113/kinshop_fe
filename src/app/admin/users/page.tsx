@@ -1,55 +1,61 @@
 "use client";
 
-import React, { useState, useEffect, useDeferredValue } from 'react';
+import React, { useState, useDeferredValue } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DataTable from '@/components/admin/DataTable';
 import { apiService } from '@/services/api';
 import { User } from '@/types/api';
 import { formatDate } from '@/utils/format';
 import { User as UserIcon, Shield, Mail } from 'lucide-react';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import { toast } from 'react-hot-toast';
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   
+  // Confirm Modal state
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   // Pagination state
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
 
-  const fetchUsers = async (currentPage: number = 1, search: string = '') => {
-    try {
-      setLoading(true);
-      const res = await apiService.getAllUsers({ page: currentPage, limit: 20, search });
-      setUsers(res.data);
-      setTotalPages(res.meta.totalPages);
-      setTotalItems(res.meta.totalItems);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
-    }
+  const { data: response, isLoading: loading, refetch } = useQuery({
+    queryKey: ['admin-users', page, deferredSearchQuery],
+    queryFn: () => apiService.getAllUsers({ page, limit: 20, search: deferredSearchQuery }),
+  });
+
+  const users = response?.data || [];
+  const totalPages = response?.meta?.totalPages || 1;
+  const totalItems = response?.meta?.totalItems || 0;
+
+  const confirmDelete = (user: User) => {
+    setUserToDelete(user);
+    setIsConfirmOpen(true);
   };
 
-  useEffect(() => {
-    fetchUsers(page, deferredSearchQuery);
-  }, [page, deferredSearchQuery]);
-
-  const handleDelete = async (user: User) => {
-    if (confirm(`Bạn có chắc muốn xóa người dùng ${user.fullName}?`)) {
-      try {
-        await apiService.deleteUser(user.id);
-        fetchUsers(page, deferredSearchQuery);
-      } catch (error) {
-        alert('Xóa người dùng thất bại');
-      }
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await apiService.deleteUser(userToDelete.id);
+      toast.success(`Deleted user ${userToDelete.fullName}`);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || 'Delete user failed');
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmOpen(false);
+      setUserToDelete(null);
     }
   };
 
   const columns = [
     {
-      header: 'Người dùng',
+      header: 'User',
       accessor: (user: User) => (
         <div className="flex items-center space-x-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
@@ -66,7 +72,7 @@ export default function AdminUsersPage() {
       ),
     },
     {
-      header: 'Vai trò',
+      header: 'Role',
       accessor: (user: User) => (
         <span className={`inline-flex items-center rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest ${
           user.role === 'ADMIN' 
@@ -79,7 +85,7 @@ export default function AdminUsersPage() {
       ),
     },
     {
-      header: 'Ngày tham gia',
+      header: 'Joined date',
       accessor: (user: User) => (
         <span className="text-slate-500 font-medium">{formatDate(user.createdAt)}</span>
       ),
@@ -87,18 +93,29 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <DataTable
-      title="Người dùng"
-      data={users}
-      columns={columns}
-      loading={loading}
-      onDelete={handleDelete}
-      currentPage={page}
-      totalPages={totalPages}
-      totalItems={totalItems}
-      onPageChange={(p) => setPage(p)}
-      searchQuery={searchQuery}
-      onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
-    />
+    <>
+      <DataTable
+        title="Users"
+        data={users}
+        columns={columns}
+        loading={loading}
+        onDelete={confirmDelete}
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={(p) => setPage(p)}
+        searchQuery={searchQuery}
+        onSearchChange={(val) => { setSearchQuery(val); setPage(1); }}
+      />
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete User"
+        message={<span>Are you sure you want to delete user <strong className="text-slate-900">{userToDelete?.fullName}</strong>? This action cannot be undone.</span>}
+        confirmText="Delete User"
+        isLoading={isDeleting}
+      />
+    </>
   );
 }

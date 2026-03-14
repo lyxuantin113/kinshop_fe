@@ -1,0 +1,2 @@
+﻿src/app/categories/[id]/page.tsx(21,33): error TS2339: Property 'find' does not exist on type 'PaginatedResponse<Category> | Category[]'.
+  Property 'find' does not exist on type 'PaginatedResponse<Category>'.

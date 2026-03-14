@@ -8,6 +8,9 @@ import { useAuth } from '@/context/AuthContext';
 import { apiService } from '@/services/api';
 import { formatCurrency } from '@/utils/format';
 import Link from 'next/link';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import { toast } from 'react-hot-toast';
+import { PreviewCheckoutResponse } from '@/types/api';
 
 const CheckoutClient = () => {
   const { cart, refreshCart, loading: cartLoading } = useCartStore();
@@ -21,6 +24,13 @@ const CheckoutClient = () => {
   const [address, setAddress] = useState('');
   const [formError, setFormError] = useState('');
 
+  const [couponCode, setCouponCode] = useState('');
+  const [checkingDiscount, setCheckingDiscount] = useState(false);
+  const [previewData, setPreviewData] = useState<PreviewCheckoutResponse | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState('');
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   useEffect(() => {
     if (user) {
       setPhoneNumber(user.phoneNumber || '');
@@ -32,7 +42,7 @@ const CheckoutClient = () => {
     const fetchConfigs = async () => {
       try {
         const res = await apiService.getAllConfigs();
-        const configArray = Array.isArray(res) ? res : (res?.data || []);
+        const configArray = Array.isArray(res) ? res : [];
         
         const baseFee = configArray.find((c: any) => c.key === 'SHIPPING_BASE_FEE')?.value;
         const freeThreshold = configArray.find((c: any) => c.key === 'SHIPPING_FREE_THRESHOLD')?.value;
@@ -49,29 +59,60 @@ const CheckoutClient = () => {
     fetchConfigs();
   }, []);
 
-  const calculateSubtotal = () => {
-    return cart?.items?.reduce((acc, item) => acc + Number(item.product.price) * item.quantity, 0) || 0;
+  const loadPreview = async (code?: string) => {
+    try {
+      if (code) setCheckingDiscount(true);
+      const data = await apiService.previewCheckout(code);
+      setPreviewData(data);
+      if (code) {
+        setAppliedCoupon(code);
+        toast.success('Đã áp dụng mã giảm giá!');
+      } else {
+        setAppliedCoupon('');
+      }
+    } catch (error: any) {
+      if (code) {
+        toast.error(error.response?.data?.message || error.message || 'Mã giảm giá không hợp lệ.');
+      }
+      setAppliedCoupon('');
+      setCouponCode('');
+    } finally {
+      if (code) setCheckingDiscount(false);
+    }
   };
 
-  const handlePlaceOrder = async () => {
+  useEffect(() => {
+    if (cart && cart.items.length > 0) {
+      loadPreview();
+    }
+  }, [cart]);
+
+  const confirmPlaceOrder = () => {
     if (!phoneNumber || !address) {
-      setFormError('Vui lòng nhập đầy đủ Số điện thoại và Địa chỉ giao hàng.');
+      setFormError('Please enter your phone number and address.');
       return;
     }
+    setFormError('');
+    setIsConfirmOpen(true);
+  };
 
+
+
+  const handlePlaceOrder = async () => {
     try {
-      setFormError('');
       setLoading(true);
       const response = await apiService.checkout({
         phoneNumber,
-        address
+        address,
+        couponCode: appliedCoupon || undefined
       });
-      // Assuming response contains the created order
       await refreshCart(); // Clear cart after successful checkout
+      toast.success('Order placed successfully!');
+      setIsConfirmOpen(false);
       router.push(`/orders/${response.id || ''}`);
     } catch (error: any) {
       console.error('Checkout failed:', error);
-      alert(error.response?.data?.message || 'Failed to place order. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to place order. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -100,9 +141,11 @@ const CheckoutClient = () => {
     );
   }
 
-  const subtotal = calculateSubtotal();
-  const shipping = subtotal >= configs.threshold ? 0 : configs.fee;
-  const total = subtotal + shipping;
+  // Fallback to 0 if preview hasn't loaded yet
+  const subtotal = previewData?.subtotal || 0;
+  const shipping = previewData?.shippingFee || 0;
+  const discountVal = previewData?.discountAmount || 0;
+  const total = previewData?.totalAmount || 0;
 
   return (
     <div className="grid gap-12 lg:grid-cols-5">
@@ -219,24 +262,59 @@ const CheckoutClient = () => {
           </div>
 
           <div className="space-y-4 border-t border-slate-100 pt-6">
-            <div className="flex justify-between text-sm text-slate-500">
-              <span>Subtotal</span>
+            <div className="space-y-2">
+              <div className="flex space-x-2">
+                <input 
+                    type="text" 
+                    placeholder="Nhập mã giảm giá (nếu có)" 
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm uppercase transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none"
+                    disabled={checkingDiscount || appliedCoupon !== ''}
+                />
+                {appliedCoupon ? (
+                   <button 
+                       onClick={() => { setAppliedCoupon(''); setCouponCode(''); loadPreview(); }}
+                       className="rounded-xl bg-rose-50 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-100 transition-colors"
+                   >
+                       Xóa mã
+                   </button>
+                ) : (
+                   <button 
+                       onClick={() => loadPreview(couponCode.trim())}
+                       disabled={checkingDiscount || !couponCode.trim()}
+                       className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 transition-colors disabled:bg-slate-300 min-w-[80px]"
+                   >
+                       {checkingDiscount ? <Loader2 className="h-4 w-4 animate-spin mx-auto"/> : 'Áp dụng'}
+                   </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-between text-sm text-slate-500 border-t border-slate-100 pt-4">
+              <span>Tạm tính</span>
               <span className="font-bold text-slate-900">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-slate-500">
-              <span>Shipping</span>
+              <span>Phí vận chuyển</span>
               <span className={`font-bold ${shipping === 0 ? 'text-emerald-500' : 'text-slate-900'}`}>
                 {shipping === 0 ? 'FREE' : formatCurrency(shipping)}
               </span>
             </div>
+            {discountVal > 0 && (
+              <div className="flex justify-between text-sm text-emerald-600">
+                <span>Giảm giá ({appliedCoupon})</span>
+                <span className="font-bold">-{formatCurrency(discountVal)}</span>
+              </div>
+            )}
             <div className="border-t border-slate-100 pt-4 flex justify-between">
-              <span className="text-lg font-bold text-slate-900">Total</span>
+              <span className="text-lg font-bold text-slate-900">Tổng thanh toán</span>
               <span className="text-2xl font-black text-primary-600">{formatCurrency(total)}</span>
             </div>
           </div>
 
           <button 
-            onClick={handlePlaceOrder}
+            onClick={confirmPlaceOrder}
             disabled={loading}
             className="btn-primary mt-8 w-full h-14 text-base font-bold shadow-xl shadow-primary-500/30 group text-white"
           >
@@ -256,6 +334,30 @@ const CheckoutClient = () => {
           </div>
         </div>
       </div>
+      
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handlePlaceOrder}
+        title="Xác nhận thanh toán"
+        message={
+          <div className="space-y-4">
+            <p>Vui lòng kiểm tra lại thông tin giao hàng:</p>
+            <div className="rounded-xl bg-slate-50 p-4 space-y-2 border border-slate-100">
+              <p className="text-sm font-bold text-slate-900">{user?.fullName || fullName}</p>
+              <p className="text-sm text-slate-600">SĐT: {phoneNumber}</p>
+              <p className="text-sm text-slate-600">Địa chỉ: {address}</p>
+            </div>
+            {appliedCoupon && (
+              <p className="text-sm text-emerald-600">Mã giảm giá đã áp dụng: <strong>{appliedCoupon.toUpperCase()}</strong> (-{formatCurrency(discountVal)})</p>
+            )}
+            <p>Tổng thanh toán: <strong className="text-primary-600 text-lg">{formatCurrency(total)}</strong></p>
+          </div>
+        }
+        confirmText="Đặt hàng ngay"
+        isLoading={loading}
+        isDestructive={false}
+      />
     </div>
   );
 };

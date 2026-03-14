@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useDeferredValue, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ProductSidebar from '@/components/products/ProductSidebar';
 import SortDropdown, { SortOption } from '@/components/products/SortDropdown';
@@ -27,7 +27,7 @@ const ProductListingContent: React.FC<ProductListingClientProps> = ({ initialDat
   const initialSearch = searchParams.get('search') || '';
   
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [sortOrder, setSortOrder] = useState<SortOption>('newest');
@@ -39,29 +39,22 @@ const ProductListingContent: React.FC<ProductListingClientProps> = ({ initialDat
     if (urlSearch !== searchQuery) {
       setSearchQuery(urlSearch);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, selectedCategory]);
+  }, [deferredSearchQuery, selectedCategory]);
 
   const { data: response, isLoading: loading } = useQuery({
-    queryKey: ['products', debouncedSearch, selectedCategory, page],
+    queryKey: ['products', deferredSearchQuery, selectedCategory, page],
     queryFn: () => apiService.getProducts({
-      search: debouncedSearch,
+      search: deferredSearchQuery,
       categoryId: selectedCategory || undefined,
       page,
       limit: 12,
     }) as Promise<Product[] | PaginatedResponse<Product>>,
-    initialData: (page === 1 && !debouncedSearch && !selectedCategory) ? initialData as any : undefined,
+    initialData: (page === 1 && !deferredSearchQuery && !selectedCategory) ? initialData as any : undefined,
   });
 
   const products = useMemo(() => Array.isArray(response) ? response : (response?.data || []), [response]);
